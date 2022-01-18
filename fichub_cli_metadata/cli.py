@@ -14,8 +14,7 @@ app = typer.Typer(add_completion=False)
 
 # @logger.catch  # for internal debugging
 @app.callback(no_args_is_help=True,
-              invoke_without_command=True,
-              help='A metadata plugin for fetching Metadata from the Fichub API for the fichub-cli')
+              invoke_without_command=True)
 def metadata(
     input: str = typer.Option(
         "", "-i", "--input", help="Input: Either an URL or path to a file"),
@@ -37,6 +36,17 @@ def metadata(
 
 
 ):
+    """
+    A metadata plugin for fetching Metadata from the Fichub API for fichub-cli
+
+    To report issues upstream for the supported sites, visit https://fichub.net/#contact
+
+    To report issues for the plugin, open an issue at https://github.com/fichub-cli-contrib/fichub-cli-metadata/issues
+
+    To report issues for the CLI, open an issue at https://github.com/FicHub/fichub-cli/issues
+
+    Failed downloads will be saved in the `err.log` file in the current directory
+    """
     if log:
         debug = True
         typer.echo(
@@ -49,7 +59,7 @@ def metadata(
         fic.get_metadata(input)
 
     if version:
-        typer.echo("fichub-cli-metadata: v0.1")
+        typer.echo("fichub-cli-metadata: v0.1.1")
 
     try:
         if fic.exit_status == 1:
