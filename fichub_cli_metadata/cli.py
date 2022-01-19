@@ -48,9 +48,11 @@ def metadata(
     Failed downloads will be saved in the `err.log` file in the current directory
     """
     if log:
-        debug = True
+        # debug = True
         typer.echo(
-            Fore.GREEN + f"Creating fichub_cli - {timestamp}.log in the current directory" + Style.RESET_ALL)
+            Fore.GREEN + "Creating " + Style.RESET_ALL + Fore.YELLOW +
+            f"fichub_cli - {timestamp}.log" + Style.RESET_ALL +
+            Fore.GREEN + " in the current directory!" + Style.RESET_ALL)
         logger.add(f"fichub_cli - {timestamp}.log")
 
     if input:
@@ -59,12 +61,15 @@ def metadata(
         fic.get_metadata(input)
 
     if version:
-        typer.echo("fichub-cli-metadata: v0.1.1")
+        typer.echo("fichub-cli-metadata: v0.1.2")
 
     try:
         if fic.exit_status == 1:
-            typer.echo(Fore.RED + """
-Unsupported URLs found! Check err.log in the current directory!""" + Style.RESET_ALL)
+            typer.echo(
+                Fore.RED +
+                "\nMetadata fetch failed  for one or more URLs! Check " + Style.RESET_ALL +
+                Fore.YELLOW + "err.log" + Style.RESET_ALL + Fore.RED +
+                " in the current directory!" + Style.RESET_ALL)
         sys.exit(fic.exit_status)
     except UnboundLocalError:
         sys.exit(0)

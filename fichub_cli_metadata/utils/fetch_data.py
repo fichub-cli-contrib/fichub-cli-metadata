@@ -59,7 +59,11 @@ class FetchData:
                     if fic.fic_extraMetadata:
                         meta_list.append(fic.fic_extraMetadata)
                         meta_fetched_log(self.debug, url)
+
+                        # update the exit status
+                        self.exit_status = fic.exit_status
                     else:
+                        self.exit_status = 1
                         supported_url = None
 
             meta_data = "{\"meta\": ["+", ".join(meta_list)+"]}"
