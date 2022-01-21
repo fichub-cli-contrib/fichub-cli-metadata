@@ -17,7 +17,8 @@ setup(
         include=['fichub_cli_metadata', 'fichub_cli_metadata.*']),
     include_package_data=True,
     install_requires=[
-        'fichub-cli>=0.5'
+        'fichub-cli>=0.5',
+        'appdirs>=1.4.4'
     ],
     entry_points='''
         [console_scripts]

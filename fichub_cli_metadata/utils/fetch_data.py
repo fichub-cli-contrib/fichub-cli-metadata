@@ -8,6 +8,7 @@ from rich.console import Console
 from .fichub import FicHub
 from .logging import download_processing_log, meta_fetched_log
 from .processing import check_url
+from .settings import Settings, app_dir
 
 bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt}, {rate_fmt}{postfix}, ETA: {remaining}"
 console = Console()
@@ -22,6 +23,10 @@ class FetchData:
         self.exit_status = 0
 
     def get_metadata(self, _input: str):
+
+        # Initialize the app
+        settings = Settings()
+        settings.init_app()
 
         meta_list = []
         file_name = "metadata"
