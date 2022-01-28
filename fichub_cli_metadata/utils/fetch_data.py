@@ -10,7 +10,7 @@ from rich.console import Console
 from sqlalchemy.orm import Session
 
 from .fichub import FicHub
-from .logging import meta_fetched_log
+from .logging import meta_fetched_log, db_not_found_log
 from . import models, crud
 from .processing import init_database, get_db, object_as_dict
 
@@ -96,11 +96,7 @@ class FetchData:
         try:
             models.Base.metadata.create_all(bind=self.engine)
         except sqlalchemy.exc.OperationalError:
-            tqdm.write(
-                Fore.RED + f"Unable to open database file: {self.db_file}\nPlease recheck the filename!")
-            if self.debug:
-                logger.error(
-                    f"Unable to open database file: {self.db_file}\nPlease recheck the filename!")
+            db_not_found_log(self.debug, self.db_file)
             sys.exit()
         if not self.update_db:
             crud.insert_data(self.db, item, self.debug)
@@ -109,7 +105,12 @@ class FetchData:
             crud.update_data(self.db, item, self.debug)
 
     def update_metadata(self):
-        self.engine, self.SessionLocal = init_database(self.input_db)
+        if os.path.isfile(self.input_db):
+            self.engine, self.SessionLocal = init_database(self.input_db)
+        else:
+            db_not_found_log(self.debug, self.input_db)
+            sys.exit()
+
         self.db: Session = next(get_db(self.SessionLocal))
         if self.debug:
             logger.info("Getting all rows from database.")
@@ -117,11 +118,7 @@ class FetchData:
         try:
             all_rows = crud.get_all_rows(self.db)
         except sqlalchemy.exc.OperationalError:
-            tqdm.write(
-                Fore.RED + f"Unable to open database file: {self.input_db}\nPlease recheck the filename!")
-            if self.debug:
-                logger.error(
-                    f"Unable to open database file: {self.input_db}\nPlease recheck the filename!")
+            db_not_found_log(self.debug, self.input_db)
             sys.exit()
 
         with tqdm(total=len(all_rows), ascii=False,
@@ -148,7 +145,12 @@ class FetchData:
         _, file_name = os.path.split(self.input_db)
         self.db_name = os.path.splitext(file_name)[0]
         self.json_file = os.path.join(self.out_dir, self.db_name)+".json"
-        self.engine, self.SessionLocal = init_database(self.input_db)
+
+        if os.path.isfile(self.input_db):
+            self.engine, self.SessionLocal = init_database(self.input_db)
+        else:
+            db_not_found_log(self.debug, self.input_db)
+            sys.exit()
 
         if self.input_db:
             self.db: Session = next(get_db(self.SessionLocal))

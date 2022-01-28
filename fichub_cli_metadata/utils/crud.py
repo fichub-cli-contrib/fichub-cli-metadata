@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from . import models
 from .processing import process_extraMeta, get_ins_query, sql_to_json
+from .logging import db_not_found_log
 
 
 def insert_data(db: Session, item: dict, debug: bool):
@@ -81,11 +82,7 @@ def dump_json(db: Session, input_db, json_file: str, debug: bool):
     try:
         all_rows = get_all_rows(db)
     except OperationalError:
-        tqdm.write(
-            Fore.RED + f"Unable to open database file: {input_db}\nPlease recheck the filename!")
-        if debug:
-            logger.error(
-                f"Unable to open database file: {input_db}\nPlease recheck the filename!")
+        db_not_found_log(debug, input_db)
         sys.exit()
 
     sql_to_json(json_file, all_rows, debug)
