@@ -20,7 +20,7 @@ def metadata(
         "", "-i", "--input", help="Input: Either an URL or path to a file"),
 
     input_db: str = typer.Option(
-        "", "--input-db", help="Use existing sqlite db"),
+        "", "--input-db", help="Use an existing sqlite db"),
 
     update_db: bool = typer.Option(
         False, "--update-db", help="Update existing db (--input-db required)", is_flag=True),
@@ -69,6 +69,12 @@ def metadata(
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
                         export_db=export_db)
         fic.save_metadata(input)
+
+    if input_db and update_db and not input:
+        fic = FetchData(debug=debug, automated=automated,
+                        out_dir=out_dir, input_db=input_db, update_db=update_db,
+                        export_db=export_db)
+        fic.update_metadata()
 
     if export_db:
         fic = FetchData(debug=debug, automated=automated,

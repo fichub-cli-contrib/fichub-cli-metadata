@@ -1,4 +1,4 @@
-import typer
+from tqdm import tqdm
 from colorama import Fore
 from loguru import logger
 import json
@@ -113,7 +113,7 @@ def sql_to_json(json_file: str, query_output, debug):
         row_dict = object_as_dict(row)
         if debug:
             logger.info(f"Processing {row_dict['source']}")
-        typer.echo(Fore.BLUE+f"Processing {row_dict['source']}")
+        tqdm.write(Fore.BLUE+f"Processing {row_dict['source']}")
         meta_list.append(json.dumps(row_dict, indent=4))
 
     meta_data = "{\"meta\": ["
@@ -125,7 +125,7 @@ def sql_to_json(json_file: str, query_output, debug):
         with open(json_file, 'w') as outfile:
             if debug:
                 logger.info(f"Saving {json_file}")
-            typer.echo(Fore.GREEN+f"Saving {json_file}")
+            tqdm.write(Fore.GREEN+f"Saving {json_file}")
             outfile.write(meta_data)
 
 

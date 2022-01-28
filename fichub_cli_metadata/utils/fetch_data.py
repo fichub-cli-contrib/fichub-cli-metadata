@@ -1,17 +1,18 @@
 import os
+import sys
 from datetime import datetime
+import sqlalchemy
 from tqdm import tqdm
 from colorama import Fore, Style
 from loguru import logger
 from rich.console import Console
-import typer
 
 from sqlalchemy.orm import Session
 
 from .fichub import FicHub
 from .logging import meta_fetched_log
 from . import models, crud
-from .processing import init_database, get_db
+from .processing import init_database, get_db, object_as_dict
 
 from fichub_cli.utils.logging import download_processing_log
 from fichub_cli.utils.processing import check_url
@@ -33,7 +34,6 @@ class FetchData:
         self.exit_status = 0
 
     def save_metadata(self, input: str):
-
         db_name = "fichub_metadata"
         supported_url = None
 
@@ -93,13 +93,56 @@ class FetchData:
 
     def save_to_db(self, item):
         self.db: Session = next(get_db(self.SessionLocal))
-        models.Base.metadata.create_all(bind=self.engine)
-
+        try:
+            models.Base.metadata.create_all(bind=self.engine)
+        except sqlalchemy.exc.OperationalError:
+            tqdm.write(
+                Fore.RED + f"Unable to open database file: {self.db_file}\nPlease recheck the filename!")
+            if self.debug:
+                logger.error(
+                    f"Unable to open database file: {self.db_file}\nPlease recheck the filename!")
+            sys.exit()
         if not self.update_db:
             crud.insert_data(self.db, item, self.debug)
 
         elif self.update_db and not self.input_db == "":
             crud.update_data(self.db, item, self.debug)
+
+    def update_metadata(self):
+        self.engine, self.SessionLocal = init_database(self.input_db)
+        self.db: Session = next(get_db(self.SessionLocal))
+        if self.debug:
+            logger.info("Getting all rows from database.")
+        tqdm.write(Fore.GREEN + "Getting all rows from database.")
+        try:
+            all_rows = crud.get_all_rows(self.db)
+        except sqlalchemy.exc.OperationalError:
+            tqdm.write(
+                Fore.RED + f"Unable to open database file: {self.input_db}\nPlease recheck the filename!")
+            if self.debug:
+                logger.error(
+                    f"Unable to open database file: {self.input_db}\nPlease recheck the filename!")
+            sys.exit()
+
+        with tqdm(total=len(all_rows), ascii=False,
+                  unit="url", bar_format=bar_format) as pbar:
+
+            for row in all_rows:
+                row_dict = object_as_dict(row)
+                pbar.update(1)
+                fic = FicHub(self.debug, self.automated,
+                             self.exit_status)
+                fic.get_fic_extraMetadata(row_dict['source'])
+
+                if fic.fic_extraMetadata:
+                    meta_fetched_log(self.debug, row_dict['source'])
+                    crud.update_data(
+                        self.db, fic.fic_extraMetadata, self.debug)
+
+                    # update the exit status
+                    self.exit_status = fic.exit_status
+                else:
+                    self.exit_status = 1
 
     def export_db_as_json(self):
         _, file_name = os.path.split(self.input_db)
@@ -109,7 +152,7 @@ class FetchData:
 
         if self.input_db:
             self.db: Session = next(get_db(self.SessionLocal))
-            crud.dump_json(self.db, self.json_file, self.debug)
+            crud.dump_json(self.db, self.input_db, self.json_file, self.debug)
         else:
-            typer.echo(
+            tqdm.write(
                 "SQLite db is not found. Use an existing sqlite db using: --input-db ")
