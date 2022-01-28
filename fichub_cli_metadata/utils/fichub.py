@@ -9,7 +9,7 @@ import time
 from fichub_cli.utils.fichub import retry_strategy
 
 headers = {
-    'User-Agent': 'fichub_cli_metadata/0.1.2',
+    'User-Agent': 'fichub_cli_metadata/0.1.3',
 }
 
 

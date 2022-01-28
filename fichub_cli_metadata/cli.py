@@ -83,7 +83,7 @@ def metadata(
         fic.export_db_as_json()
 
     if version is True:
-        typer.echo("fichub-cli-metadata: v0.1.2")
+        typer.echo("fichub-cli-metadata: v0.1.3")
 
     try:
         if fic.exit_status == 1:
