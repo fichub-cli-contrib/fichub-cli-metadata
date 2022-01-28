@@ -1,22 +1,16 @@
 import requests
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
 
 from colorama import Fore, Style
 from tqdm import tqdm
 from loguru import logger
-import json
 import time
+
+from fichub_cli.utils.fichub import retry_strategy
 
 headers = {
     'User-Agent': 'fichub_cli_metadata/0.1.2',
 }
-
-retry_strategy = Retry(
-    total=3,
-    backoff_factor=1,
-    status_forcelist=[429, 500, 502, 503, 504]
-)
 
 
 class FicHub:
@@ -58,8 +52,7 @@ class FicHub:
 
         try:
             self.response = response.json()
-            self.fic_extraMetadata = json.dumps(
-                self.response['meta'], indent=4)
+            self.fic_extraMetadata = self.response['meta']
 
         # if metadata not found
         except (KeyError, UnboundLocalError) as e:

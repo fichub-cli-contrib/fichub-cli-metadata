@@ -19,8 +19,17 @@ def metadata(
     input: str = typer.Option(
         "", "-i", "--input", help="Input: Either an URL or path to a file"),
 
+    input_db: str = typer.Option(
+        "", "--input-db", help="Use existing sqlite db"),
+
+    update_db: bool = typer.Option(
+        False, "--update-db", help="Update existing db (--input-db required)", is_flag=True),
+
+    export_db: bool = typer.Option(
+        False, "--export-db", help="Export the existing db as json (--input-db required)", is_flag=True),
+
     out_dir: str = typer.Option(
-        "", "-o", " --out-dir", help="Path to the Output directory for files (default: Current Directory)"),
+        "", "-o", " --out-dir", help="Path to the Output directory (default: Current Directory)"),
 
     debug: bool = typer.Option(
         False, "-d", " --debug", help="Show the log in the console for debugging", is_flag=True),
@@ -47,7 +56,7 @@ def metadata(
 
     Failed downloads will be saved in the `err.log` file in the current directory
     """
-    if log:
+    if log is True:
         # debug = True
         typer.echo(
             Fore.GREEN + "Creating " + Style.RESET_ALL + Fore.YELLOW +
@@ -57,10 +66,17 @@ def metadata(
 
     if input:
         fic = FetchData(debug=debug, automated=automated,
-                        out_dir=out_dir)
-        fic.get_metadata(input)
+                        out_dir=out_dir, input_db=input_db, update_db=update_db,
+                        export_db=export_db)
+        fic.save_metadata(input)
 
-    if version:
+    if export_db:
+        fic = FetchData(debug=debug, automated=automated,
+                        out_dir=out_dir, input_db=input_db, update_db=update_db,
+                        export_db=export_db)
+        fic.export_db_as_json()
+
+    if version is True:
         typer.echo("fichub-cli-metadata: v0.1.2")
 
     try:

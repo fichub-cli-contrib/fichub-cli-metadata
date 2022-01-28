@@ -1,2 +1,2 @@
-fichub-cli
-appdirs==1.4.4
+fichub-cli==0.5.1
+sqlalchemy==1.4.31

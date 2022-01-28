@@ -18,7 +18,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'fichub-cli>=0.5',
-        'appdirs>=1.4.4'
+        'sqlalchemy>=1.4.31'
     ],
     entry_points='''
         [console_scripts]
