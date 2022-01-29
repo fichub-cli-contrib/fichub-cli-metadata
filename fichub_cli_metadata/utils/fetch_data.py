@@ -60,6 +60,7 @@ class FetchData:
             self.db_file = self.input_db
 
         self.engine, self.SessionLocal = init_database(self.db_file)
+        self.db: Session = next(get_db(self.SessionLocal))
 
         with tqdm(total=len(urls), ascii=False,
                   unit="url", bar_format=bar_format) as pbar:
@@ -71,19 +72,34 @@ class FetchData:
                     url, self.debug, self.exit_status)
 
                 if supported_url:
-                    fic = FicHub(self.debug, self.automated,
-                                 self.exit_status)
-                    fic.get_fic_extraMetadata(url)
 
-                    if fic.fic_extraMetadata:
-                        meta_fetched_log(self.debug, url)
-                        self.save_to_db(fic.fic_extraMetadata)
+                    if self.input_db:
+                        exists = self.db.query(models.Metadata).filter(
+                            models.Metadata.source == url).first()
+                    else:
+                        exists = None
 
-                        # update the exit status
-                        self.exit_status = fic.exit_status
+                    if not exists:
+                        fic = FicHub(self.debug, self.automated,
+                                     self.exit_status)
+                        fic.get_fic_extraMetadata(url)
+                        if fic.fic_extraMetadata:
+                            meta_fetched_log(self.debug, url)
+                            self.save_to_db(fic.fic_extraMetadata)
+
+                            # update the exit status
+                            self.exit_status = fic.exit_status
+                        else:
+                            self.exit_status = 1
+                            supported_url = None
                     else:
                         self.exit_status = 1
                         supported_url = None
+                        if self.debug:
+                            logger.info(
+                                "Metadata already exists. Skipping. Use --update-db to update existing data.")
+                        tqdm.write(Fore.RED +
+                                   "Metadata already exists. Skipping. Use --update-db to update existing data.\n")
 
             if self.exit_status == 0:
                 tqdm.write(Fore.GREEN +
@@ -92,7 +108,6 @@ class FetchData:
                            Style.RESET_ALL)
 
     def save_to_db(self, item):
-        self.db: Session = next(get_db(self.SessionLocal))
         try:
             models.Base.metadata.create_all(bind=self.engine)
         except sqlalchemy.exc.OperationalError:

@@ -89,9 +89,9 @@ def metadata(
         if fic.exit_status == 1:
             typer.echo(
                 Fore.RED +
-                "\nMetadata fetch failed  for one or more URLs! Check " + Style.RESET_ALL +
+                "\nMetadata fetch failed for one or more URLs! Check " + Style.RESET_ALL +
                 Fore.YELLOW + "err.log" + Style.RESET_ALL + Fore.RED +
-                " in the current directory!" + Style.RESET_ALL)
+                " in the current directory for possible urls!" + Style.RESET_ALL)
         sys.exit(fic.exit_status)
     except UnboundLocalError:
         sys.exit(0)
