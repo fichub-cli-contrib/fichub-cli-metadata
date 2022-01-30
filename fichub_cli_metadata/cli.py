@@ -23,16 +23,19 @@ def metadata(
         "", "--input-db", help="Use an existing sqlite db"),
 
     update_db: bool = typer.Option(
-        False, "--update-db", help="Update existing db (--input-db required)", is_flag=True),
+        False, "--update-db", help="Self-Update existing db (--input-db required)", is_flag=True),
 
     export_db: bool = typer.Option(
         False, "--export-db", help="Export the existing db as json (--input-db required)", is_flag=True),
 
     out_dir: str = typer.Option(
-        "", "-o", " --out-dir", help="Path to the Output directory (default: Current Directory)"),
+        "", "-o", "--out-dir", help="Path to the Output directory (default: Current Directory)"),
+
+    force: bool = typer.Option(
+        False, "--force", help="Force update the metadata", is_flag=True),
 
     debug: bool = typer.Option(
-        False, "-d", " --debug", help="Show the log in the console for debugging", is_flag=True),
+        False, "-d", "--debug", help="Show the log in the console for debugging", is_flag=True),
 
     log: bool = typer.Option(
         False, help="Save the logfile for debugging", is_flag=True),
@@ -64,22 +67,22 @@ def metadata(
             Fore.GREEN + " in the current directory!" + Style.RESET_ALL)
         logger.add(f"fichub_cli - {timestamp}.log")
 
-    if input:
+    if input and not update_db:
         fic = FetchData(debug=debug, automated=automated,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
-                        export_db=export_db)
+                        export_db=export_db, force=force)
         fic.save_metadata(input)
 
-    if input_db and update_db and not input:
+    if input_db and update_db:
         fic = FetchData(debug=debug, automated=automated,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
-                        export_db=export_db)
+                        export_db=export_db, force=force)
         fic.update_metadata()
 
     if export_db:
         fic = FetchData(debug=debug, automated=automated,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
-                        export_db=export_db)
+                        export_db=export_db, force=force)
         fic.export_db_as_json()
 
     if version is True:

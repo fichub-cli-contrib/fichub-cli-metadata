@@ -24,11 +24,12 @@ console = Console()
 
 class FetchData:
     def __init__(self, out_dir="", input_db="", update_db=False,
-                 export_db=False, debug=False, automated=False):
+                 export_db=False, debug=False, automated=False, force=False):
         self.out_dir = out_dir
         self.input_db = input_db
         self.update_db = update_db
         self.export_db = export_db
+        self.force = force
         self.debug = debug
         self.automated = automated
         self.exit_status = 0
@@ -78,8 +79,7 @@ class FetchData:
                             models.Metadata.source == url).first()
                     else:
                         exists = None
-
-                    if not exists:
+                    if not exists or self.force:
                         fic = FicHub(self.debug, self.automated,
                                      self.exit_status)
                         fic.get_fic_extraMetadata(url)
@@ -97,9 +97,9 @@ class FetchData:
                         supported_url = None
                         if self.debug:
                             logger.info(
-                                "Metadata already exists. Skipping. Use --update-db to update existing data.")
+                                "Metadata already exists. Skipping. Use --force to force-update existing data.")
                         tqdm.write(Fore.RED +
-                                   "Metadata already exists. Skipping. Use --update-db to update existing data.\n")
+                                   "Metadata already exists. Skipping. Use --force to force-update existing data.\n")
 
             if self.exit_status == 0:
                 tqdm.write(Fore.GREEN +
@@ -113,10 +113,10 @@ class FetchData:
         except sqlalchemy.exc.OperationalError:
             db_not_found_log(self.debug, self.db_file)
             sys.exit()
-        if not self.update_db:
+        if not self.update_db and not self.force:
             crud.insert_data(self.db, item, self.debug)
 
-        elif self.update_db and not self.input_db == "":
+        elif self.update_db and not self.input_db == "" or self.force:
             crud.update_data(self.db, item, self.debug)
 
     def update_metadata(self):

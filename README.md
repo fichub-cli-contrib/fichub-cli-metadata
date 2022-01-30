@@ -81,7 +81,7 @@ fichub_cli metadata -i urls.txt --input-db "urls - 2022-01-29 T000558.sqlite"
 - To update an existing db from given input
 
 ```
-fichub_cli metadata-i urls.txt --input-db "urls - 2022-01-29 T000558.sqlite" --update-db
+fichub_cli metadata-i urls.txt --input-db "urls - 2022-01-29 T000558.sqlite" --force
 ```
 
 - To self-update an existing db i.e. update each row from the db

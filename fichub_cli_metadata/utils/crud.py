@@ -23,9 +23,9 @@ def insert_data(db: Session, item: dict, debug: bool):
     else:
         if debug:
             logger.info(
-                "Metadata already exists. Skipping. Use --update-db to update existing data.")
+                "Metadata already exists. Skipping. Use --force to force-update existing data.")
         tqdm.write(Fore.RED +
-                   "Metadata already exists. Skipping. Use --update-db to update existing data.\n")
+                   "Metadata already exists. Skipping. Use --force to force-update existing data.\n")
 
     db.commit()
 
