@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 from datetime import datetime
 import sqlalchemy
 from tqdm import tqdm
@@ -63,6 +64,12 @@ class FetchData:
         self.engine, self.SessionLocal = init_database(self.db_file)
         self.db: Session = next(get_db(self.SessionLocal))
 
+        try:
+            # backup the db before changing the data
+            self.db_backup()
+        except FileNotFoundError:
+            # for 1st time use, no db exists
+            pass
         with tqdm(total=len(urls), ascii=False,
                   unit="url", bar_format=bar_format) as pbar:
 
@@ -113,6 +120,8 @@ class FetchData:
         except sqlalchemy.exc.OperationalError:
             db_not_found_log(self.debug, self.db_file)
             sys.exit()
+
+        # if force=True, dont insert, skip to else & update instead
         if not self.update_db and not self.force:
             crud.insert_data(self.db, item, self.debug)
 
@@ -121,7 +130,8 @@ class FetchData:
 
     def update_metadata(self):
         if os.path.isfile(self.input_db):
-            self.engine, self.SessionLocal = init_database(self.input_db)
+            self.db_file = self.input_db
+            self.engine, self.SessionLocal = init_database(self.db_file)
         else:
             db_not_found_log(self.debug, self.input_db)
             sys.exit()
@@ -133,9 +143,11 @@ class FetchData:
         try:
             all_rows = crud.get_all_rows(self.db)
         except sqlalchemy.exc.OperationalError:
-            db_not_found_log(self.debug, self.input_db)
+            db_not_found_log(self.debug, self.db_file)
             sys.exit()
 
+        # backup the db before changing the data
+        self.db_backup()
         with tqdm(total=len(all_rows), ascii=False,
                   unit="url", bar_format=bar_format) as pbar:
 
@@ -171,5 +183,17 @@ class FetchData:
             self.db: Session = next(get_db(self.SessionLocal))
             crud.dump_json(self.db, self.input_db, self.json_file, self.debug)
         else:
-            tqdm.write(
-                "SQLite db is not found. Use an existing sqlite db using: --input-db ")
+            tqdm.write(Fore.RED +
+                       "SQLite db is not found. Use an existing sqlite db using: --input-db ")
+
+    def db_backup(self):
+        """ Creates a backup db in the same directory as the sqlite db
+        """
+        backup_out_dir, file_name = os.path.split(self.db_file)
+        db_name = os.path.splitext(file_name)[0]
+        shutil.copy(self.db_file, os.path.join(
+            backup_out_dir, f"{db_name}.old.sqlite"))
+
+        if self.debug:
+            logger.info(f"Created backup db at {db_name}.old.sqlite")
+        tqdm.write(Fore.BLUE + f"Created backup db as {db_name}.old.sqlite")
