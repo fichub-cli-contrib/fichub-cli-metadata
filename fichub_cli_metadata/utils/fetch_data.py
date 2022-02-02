@@ -99,6 +99,7 @@ class FetchData:
 
                     if supported_url:
 
+                        # check if url exists in db
                         if self.input_db:
                             exists = self.db.query(models.Metadata).filter(
                                 models.Metadata.source == url).first()

@@ -1,5 +1,6 @@
 import typer
 import sys
+import os
 from loguru import logger
 from datetime import datetime
 from colorama import init, Fore, Style
@@ -87,6 +88,17 @@ def metadata(
 
     if version is True:
         typer.echo("fichub-cli-metadata: v0.1.3")
+
+    try:
+        if os.path.exists("output.log"):
+            rm_output_log = typer.prompt(
+                Fore.BLUE+"Delete the output.log?(y/n)")
+            if rm_output_log == 'y':
+                os.remove("output.log")
+
+                # if output.log doesnt exist, when run 1st time
+    except FileNotFoundError:
+        pass
 
     try:
         if fic.exit_status == 1:
