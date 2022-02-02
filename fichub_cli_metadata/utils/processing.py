@@ -9,6 +9,8 @@ from . import models
 
 
 def init_database(db):
+    """ Initialize the sqlite database
+    """
 
     engine = create_engine("sqlite:///"+db)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -25,6 +27,9 @@ def get_db(SessionLocal):
 
 
 def process_extraMeta(extraMeta: str):
+    """ Process the extraMetadata string and return
+        fields like language, genre etc
+    """
     extraMeta = extraMeta.split('-')
 
     for x in extraMeta:
@@ -80,6 +85,8 @@ def process_extraMeta(extraMeta: str):
 
 
 def get_ins_query(item: dict):
+    """ Return the insert query for the db model
+    """
     rated, language, genre, characters, reviews, favs, follows = process_extraMeta(
         item['extraMeta'])
 
@@ -130,5 +137,15 @@ def sql_to_json(json_file: str, query_output, debug):
 
 
 def object_as_dict(obj):
+    """
+    Convert a sqlalchemy object into a dictionary
+    """
     return {c.key: getattr(obj, c.key)
             for c in inspect(obj).mapper.column_attrs}
+
+
+def list_diff(li1, li2):
+    """ Make a list containing the difference between
+        two lists
+    """
+    return list(set(li1) - set(li2)) + list(set(li2) - set(li1))

@@ -24,7 +24,9 @@ class FicHub:
         self.http.mount("http://", adapter)
 
     def get_fic_extraMetadata(self, url: str):
-
+        """ Send a GET request to the Fichub API and grab the
+            'extraMetadata' key
+        """
         params = {'q': url}
         if self.automated:  # for internal testing
             params['automated'] = 'true'

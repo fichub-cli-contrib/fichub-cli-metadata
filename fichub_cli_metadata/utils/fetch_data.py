@@ -4,6 +4,7 @@ import shutil
 from datetime import datetime
 import sqlalchemy
 from tqdm import tqdm
+import typer
 from colorama import Fore, Style
 from loguru import logger
 from rich.console import Console
@@ -13,7 +14,8 @@ from sqlalchemy.orm import Session
 from .fichub import FicHub
 from .logging import meta_fetched_log, db_not_found_log
 from . import models, crud
-from .processing import init_database, get_db, object_as_dict
+from .processing import init_database, get_db, object_as_dict, \
+    list_diff
 
 from fichub_cli.utils.logging import download_processing_log
 from fichub_cli.utils.processing import check_url
@@ -36,6 +38,8 @@ class FetchData:
         self.exit_status = 0
 
     def save_metadata(self, input: str):
+        """ Store the metadata in the sqlite database
+        """
         db_name = "fichub_metadata"
         supported_url = None
 
@@ -47,12 +51,24 @@ class FetchData:
             _, file_name = os.path.split(input)
             db_name = os.path.splitext(file_name)[0]
             with open(input, "r") as f:
-                urls = f.read().splitlines()
+                urls_input = f.read().splitlines()
 
         else:
             if self.debug:
                 logger.info("Input is an URL")
-            urls = [input]
+            urls_input = [input]
+
+        try:
+            urls_output = []
+            if os.path.exists("output.log"):
+                with open("output.log", "r") as f:
+                    urls_output = f.read().splitlines()
+
+            urls = list_diff(urls_input, urls_output)
+
+        # if output.log doesnt exist, when run 1st time
+        except FileNotFoundError:
+            urls = urls_input
 
         if not self.input_db:  # create db if no existing db is given
             timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")
@@ -68,53 +84,65 @@ class FetchData:
             # backup the db before changing the data
             self.db_backup()
         except FileNotFoundError:
-            # for 1st time use, no db exists
+            # when run 1st time, no db exists
             pass
-        with tqdm(total=len(urls), ascii=False,
-                  unit="url", bar_format=bar_format) as pbar:
 
-            for url in urls:
-                download_processing_log(self.debug, url)
-                pbar.update(1)
-                supported_url, self.exit_status = check_url(
-                    url, self.debug, self.exit_status)
+        if urls:
+            with tqdm(total=len(urls), ascii=False,
+                      unit="url", bar_format=bar_format) as pbar:
 
-                if supported_url:
+                for url in urls:
+                    download_processing_log(self.debug, url)
+                    pbar.update(1)
+                    supported_url, self.exit_status = check_url(
+                        url, self.debug, self.exit_status)
 
-                    if self.input_db:
-                        exists = self.db.query(models.Metadata).filter(
-                            models.Metadata.source == url).first()
-                    else:
-                        exists = None
-                    if not exists or self.force:
-                        fic = FicHub(self.debug, self.automated,
-                                     self.exit_status)
-                        fic.get_fic_extraMetadata(url)
-                        if fic.fic_extraMetadata:
-                            meta_fetched_log(self.debug, url)
-                            self.save_to_db(fic.fic_extraMetadata)
+                    if supported_url:
 
-                            # update the exit status
-                            self.exit_status = fic.exit_status
+                        if self.input_db:
+                            exists = self.db.query(models.Metadata).filter(
+                                models.Metadata.source == url).first()
+                        else:
+                            exists = None
+                        if not exists or self.force:
+
+                            with open("output.log", "a") as file:
+                                file.write(f"{url}\n")
+
+                            fic = FicHub(self.debug, self.automated,
+                                         self.exit_status)
+                            fic.get_fic_extraMetadata(url)
+                            if fic.fic_extraMetadata:
+                                meta_fetched_log(self.debug, url)
+                                self.save_to_db(fic.fic_extraMetadata)
+
+                                # update the exit status
+                                self.exit_status = fic.exit_status
+                            else:
+                                self.exit_status = 1
+                                supported_url = None
                         else:
                             self.exit_status = 1
                             supported_url = None
-                    else:
-                        self.exit_status = 1
-                        supported_url = None
-                        if self.debug:
-                            logger.info(
-                                "Metadata already exists. Skipping. Use --force to force-update existing data.")
-                        tqdm.write(Fore.RED +
-                                   "Metadata already exists. Skipping. Use --force to force-update existing data.\n")
+                            if self.debug:
+                                logger.info(
+                                    "Metadata already exists. Skipping. Use --force to force-update existing data.")
+                            tqdm.write(Fore.RED +
+                                       "Metadata already exists. Skipping. Use --force to force-update existing data.\n")
 
-            if self.exit_status == 0:
-                tqdm.write(Fore.GREEN +
-                           "\nMetadata saved as " + Fore.BLUE +
-                           f"{os.path.abspath(self.db_file)}"+Style.RESET_ALL +
-                           Style.RESET_ALL)
+                if self.exit_status == 0:
+                    tqdm.write(Fore.GREEN +
+                               "\nMetadata saved as " + Fore.BLUE +
+                               f"{os.path.abspath(self.db_file)}"+Style.RESET_ALL +
+                               Style.RESET_ALL)
+        else:
+            typer.echo(Fore.RED +
+                       "No new urls found! If output.log exists, please clear it.")
 
     def save_to_db(self, item):
+        """ Create the dn and execute insert or update crud
+            repectively
+        """
         try:
             models.Base.metadata.create_all(bind=self.engine)
         except sqlalchemy.exc.OperationalError:
@@ -129,6 +157,8 @@ class FetchData:
             crud.update_data(self.db, item, self.debug)
 
     def update_metadata(self):
+        """ Update the metadata found in the sqlite database
+        """
         if os.path.isfile(self.input_db):
             self.db_file = self.input_db
             self.engine, self.SessionLocal = init_database(self.db_file)

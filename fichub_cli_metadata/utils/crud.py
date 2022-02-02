@@ -11,6 +11,8 @@ from .logging import db_not_found_log
 
 
 def insert_data(db: Session, item: dict, debug: bool):
+    """ Execute insert query for the db
+    """
     exists = db.query(models.Metadata).filter(
         models.Metadata.source == item['source']).first()
     if not exists:
@@ -31,7 +33,8 @@ def insert_data(db: Session, item: dict, debug: bool):
 
 
 def update_data(db: Session, item: dict, debug: bool):
-
+    """ Execute update query for the db
+    """
     exists = db.query(models.Metadata).filter(
         models.Metadata.source == item['source']).first()
     if not exists:
@@ -75,7 +78,8 @@ def update_data(db: Session, item: dict, debug: bool):
 
 
 def dump_json(db: Session, input_db, json_file: str, debug: bool):
-
+    """ Process the sqlite db and dump the metadata as json
+    """
     if debug:
         logger.info("Getting all rows from database.")
     tqdm.write(Fore.GREEN + "Getting all rows from database.")
