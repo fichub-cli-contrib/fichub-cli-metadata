@@ -30,7 +30,13 @@ def process_extraMeta(extraMeta: str):
     """ Process the extraMetadata string and return
         fields like language, genre etc
     """
-    extraMeta = extraMeta.split('-')
+    try:
+        extraMeta = extraMeta.split('-')
+    except AttributeError:
+        tqdm.write(Fore.RED +
+                   "extraMetadata not found. Adding Null for missing fields.\n")
+        extraMeta = ['']
+        pass
 
     for x in extraMeta:
         if x.strip().startswith("Rated:"):
@@ -87,6 +93,7 @@ def process_extraMeta(extraMeta: str):
 def get_ins_query(item: dict):
     """ Return the insert query for the db model
     """
+
     rated, language, genre, characters, reviews, favs, follows = process_extraMeta(
         item['extraMeta'])
 

@@ -23,9 +23,9 @@ class FicHub:
         self.http.mount("https://", adapter)
         self.http.mount("http://", adapter)
 
-    def get_fic_extraMetadata(self, url: str):
+    def get_fic_Metadata(self, url: str):
         """ Send a GET request to the Fichub API and grab the
-            'extraMetadata' key
+            'meta' key
         """
         params = {'q': url}
         if self.automated:  # for internal testing
@@ -54,18 +54,18 @@ class FicHub:
 
         try:
             self.response = response.json()
-            self.fic_extraMetadata = self.response['meta']
+            self.fic_metadata = self.response['meta']
 
         # if metadata not found
         except (KeyError, UnboundLocalError) as e:
             if self.debug:
                 logger.error(str(e))
 
-            with open("err.log", "a") as file:
+            with open("metadata_not_found.log", "a") as file:
                 file.write(url.strip()+"\n")
 
             self.exit_status = 1
-            self.fic_extraMetadata = ""
+            self.fic_metadata = ""
             tqdm.write(
                 Fore.RED + f"\nSkipping unsupported URL: {url}" +
                 Style.RESET_ALL + Fore.CYAN +

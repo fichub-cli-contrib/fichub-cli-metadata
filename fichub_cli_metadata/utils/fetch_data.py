@@ -112,10 +112,10 @@ class FetchData:
 
                             fic = FicHub(self.debug, self.automated,
                                          self.exit_status)
-                            fic.get_fic_extraMetadata(url)
-                            if fic.fic_extraMetadata:
+                            fic.get_fic_Metadata(url)
+                            if fic.fic_metadata:
                                 meta_fetched_log(self.debug, url)
-                                self.save_to_db(fic.fic_extraMetadata)
+                                self.save_to_db(fic.fic_metadata)
 
                                 # update the exit status
                                 self.exit_status = fic.exit_status
@@ -187,12 +187,12 @@ class FetchData:
                 pbar.update(1)
                 fic = FicHub(self.debug, self.automated,
                              self.exit_status)
-                fic.get_fic_extraMetadata(row_dict['source'])
+                fic.get_fic_Metadata(row_dict['source'])
 
-                if fic.fic_extraMetadata:
+                if fic.fic_metadata:
                     meta_fetched_log(self.debug, row_dict['source'])
                     self.exit_status = crud.update_data(
-                        self.db, fic.fic_extraMetadata, self.debug)
+                        self.db, fic.fic_metadata, self.debug)
                 else:
                     self.exit_status = 1
 
