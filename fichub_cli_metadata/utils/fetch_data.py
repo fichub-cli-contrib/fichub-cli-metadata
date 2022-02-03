@@ -152,10 +152,10 @@ class FetchData:
 
         # if force=True, dont insert, skip to else & update instead
         if not self.update_db and not self.force:
-            crud.insert_data(self.db, item, self.debug)
+            self.exit_status = crud.insert_data(self.db, item, self.debug)
 
         elif self.update_db and not self.input_db == "" or self.force:
-            crud.update_data(self.db, item, self.debug)
+            self.exit_status = crud.update_data(self.db, item, self.debug)
 
     def update_metadata(self):
         """ Update the metadata found in the sqlite database
@@ -191,11 +191,8 @@ class FetchData:
 
                 if fic.fic_extraMetadata:
                     meta_fetched_log(self.debug, row_dict['source'])
-                    crud.update_data(
+                    self.exit_status = crud.update_data(
                         self.db, fic.fic_extraMetadata, self.debug)
-
-                    # update the exit status
-                    self.exit_status = fic.exit_status
                 else:
                     self.exit_status = 1
 

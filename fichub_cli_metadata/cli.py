@@ -96,7 +96,7 @@ def metadata(
             if rm_output_log == 'y':
                 os.remove("output.log")
 
-                # if output.log doesnt exist, when run 1st time
+    # output.log doesnt exist, when run 1st time
     except FileNotFoundError:
         pass
 
@@ -106,7 +106,7 @@ def metadata(
                 Fore.RED +
                 "\nMetadata fetch failed for one or more URLs! Check " + Style.RESET_ALL +
                 Fore.YELLOW + "err.log" + Style.RESET_ALL + Fore.RED +
-                " in the current directory for possible urls!" + Style.RESET_ALL)
+                " in the current directory for urls!" + Style.RESET_ALL)
         sys.exit(fic.exit_status)
     except UnboundLocalError:
         sys.exit(0)
