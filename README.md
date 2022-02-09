@@ -32,9 +32,15 @@ Usage: fichub_cli metadata [OPTIONS] COMMAND [ARGS]...
 
 Options:
   -i, --input TEXT          Input: Either an URL or path to a file
-  -o,  --out-dir TEXT       Path to the Output directory for files (default: Current Directory)
+  --input-db TEXT           Use an existing sqlite db
+  --update-db               Update existing db (--input-db required)
+  --export-db               Export the existing db as json (--input-db
+                            required)
+  -o,  --out-dir TEXT       Path to the Output directory (default: Current
+                            Directory)
   -d,  --debug              Show the log in the console for debugging
-  --log / --no-log          Save the logfile for debugging  [default: no-log]
+  --log / --no-log          Save the logfile for debugging  [default: no-
+                            log]
   --version / --no-version  Display version & quit  [default: no-version]
   --help                    Show this message and exit.
 ```
@@ -64,6 +70,30 @@ fichub_cli metadata -i urls.txt
 
 ```
 fichub_cli metadata -i urls.txt -o "~/Desktop/books"
+```
+
+- To save the metadata in an existing db
+
+```
+fichub_cli metadata -i urls.txt --input-db "urls - 2022-01-29 T000558.sqlite"
+```
+
+- To update an existing db from given input
+
+```
+fichub_cli metadata -i urls.txt --input-db "urls - 2022-01-29 T000558.sqlite" --force
+```
+
+- To self-update an existing db i.e. update each row from the db
+
+```
+fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --update-db
+```
+
+- To dump an existing db as a json
+
+```
+fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --export-db
 ```
 
 # Links

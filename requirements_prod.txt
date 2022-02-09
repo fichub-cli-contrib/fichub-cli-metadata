@@ -1,1 +1,2 @@
-fichub-cli
+fichub-cli==0.5.1
+sqlalchemy==1.4.31
