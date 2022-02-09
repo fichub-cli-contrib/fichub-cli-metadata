@@ -11,7 +11,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     version='0.1.3',
-    license='MIT',
+    license='Apache License',
     url="https://github.com/fichub-cli-contrib/fichub-cli-metadata",
     packages=find_packages(
         include=['fichub_cli_metadata', 'fichub_cli_metadata.*']),
@@ -26,7 +26,7 @@ setup(
     ''',
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Apache License",
         "Operating System :: OS Independent",
     ],
 )
