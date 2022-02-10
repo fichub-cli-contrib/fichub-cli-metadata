@@ -96,6 +96,12 @@ fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --update-db
 fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --export-db
 ```
 
+- To migrate an existing db to the new schema
+
+```
+fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --migrate-db
+```
+
 # Links
 
 - [Fichub-cli](https://github.com/FicHub/fichub-cli/)

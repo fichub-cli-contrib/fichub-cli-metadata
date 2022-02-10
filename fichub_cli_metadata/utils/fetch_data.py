@@ -239,3 +239,24 @@ class FetchData:
         if self.debug:
             logger.info(f"Created backup db at {db_name}.old.sqlite")
         tqdm.write(Fore.BLUE + f"Created backup db as {db_name}.old.sqlite")
+
+    def migrate_db(self):
+        """ Migrates the db from old db schema to the new one
+        """
+        if os.path.isfile(self.input_db):
+            self.db_file = self.input_db
+            self.engine, self.SessionLocal = init_database(self.db_file)
+        else:
+            db_not_found_log(self.debug, self.input_db)
+            sys.exit()
+        # backup the db before migrating the data
+        self.db_backup()
+        self.db: Session = next(get_db(self.SessionLocal))
+        if self.debug:
+            logger.info("Migrating the database.")
+        tqdm.write(Fore.GREEN + "Migrating the database.")
+        try:
+            crud.add_column(self.db)
+        except sqlalchemy.exc.OperationalError:
+            db_not_found_log(self.debug, self.db_file)
+            sys.exit()

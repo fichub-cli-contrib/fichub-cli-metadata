@@ -22,6 +22,7 @@ class Metadata(Base):
     __tablename__ = "fichub_metadata"
 
     id = Column(Integer, primary_key=True, index=True)
+    fichub_id = Column(String)
     title = Column(String)
     author = Column(String)
     chapters = Column(Integer)
