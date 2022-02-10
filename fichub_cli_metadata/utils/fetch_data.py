@@ -18,7 +18,6 @@ import shutil
 from datetime import datetime
 import sqlalchemy
 from tqdm import tqdm
-import typer
 from colorama import Fore, Style
 from loguru import logger
 from rich.console import Console
@@ -151,8 +150,8 @@ class FetchData:
                                f"{os.path.abspath(self.db_file)}"+Style.RESET_ALL +
                                Style.RESET_ALL)
         else:
-            typer.echo(Fore.RED +
-                       "No new urls found! If output.log exists, please clear it.")
+            print(Fore.RED +
+                  "No new urls found! If output.log exists, please clear it.")
 
     def save_to_db(self, item):
         """ Create the dn and execute insert or update crud

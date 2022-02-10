@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import typer
 import sys
 import os
 from loguru import logger
@@ -24,12 +23,9 @@ from .utils.fetch_data import FetchData
 init(autoreset=True)  # colorama init
 timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")
 
-app = typer.Typer(add_completion=False)
-
-
 # @logger.catch  # for internal debugging
-@app.callback(no_args_is_help=True,
-              invoke_without_command=True)
+
+
 def metadata(
     input: str = typer.Option(
         "", "-i", "--input", help="Input: Either an URL or path to a file"),
