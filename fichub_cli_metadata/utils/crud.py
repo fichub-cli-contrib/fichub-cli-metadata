@@ -68,6 +68,7 @@ def update_data(db: Session, item: dict, debug: bool):
             models.Metadata.source == item['source']). \
             update(
             {
+                models.Metadata.fichub_id: item['id'],
                 models.Metadata.title: item['title'],
                 models.Metadata.author: item['author'],
                 models.Metadata.chapters: item['chapters'],
@@ -113,3 +114,13 @@ def dump_json(db: Session, input_db, json_file: str, debug: bool):
 
 def get_all_rows(db: Session):
     return db.query(models.Metadata).all()
+
+
+def add_column(db: Session):
+    """ To add a column AFTER an existing column
+    """
+    db.execute("ALTER TABLE fichub_metadata RENAME TO TempOldTable;")
+    db.execute("CREATE TABLE fichub_metadata(id INTEGER NOT NULL, fichub_id VARCHAR(255),title VARCHAR(255), author VARCHAR(255), chapters INTEGER, created VARCHAR(255), description VARCHAR(255), rated VARCHAR(255), language VARCHAR(255), genre VARCHAR(255), characters VARCHAR(255), reviews INTEGER, favs INTEGER, follows INTEGER, status VARCHAR(255), last_updated VARCHAR(255), words INTEGER, source VARCHAR(255), PRIMARY KEY(id))")
+    db.execute("INSERT INTO fichub_metadata (id, title , author , chapters , created , description , rated , language , genre , characters , reviews , favs , follows , status , last_updated , words , source ) SELECT id, title , author , chapters , created , description , rated , language , genre , characters , reviews , favs , follows , status , last_updated , words , source FROM TempOldTable;")
+    db.execute("DROP TABLE TempOldTable;")
+    db.commit()

@@ -112,6 +112,7 @@ def get_ins_query(item: dict):
         item['extraMeta'])
 
     query = models.Metadata(
+        fichub_id=item['id'],
         title=item['title'],
         author=item['author'],
         chapters=item['chapters'],

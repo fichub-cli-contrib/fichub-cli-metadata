@@ -39,6 +39,9 @@ def metadata(
     export_db: bool = typer.Option(
         False, "--export-db", help="Export the existing db as json (--input-db required)", is_flag=True),
 
+    migrate_db: bool = typer.Option(
+        False, "--migrate-db", help="Migrate to new db schema (--input-db required)", is_flag=True),
+
     out_dir: str = typer.Option(
         "", "-o", "--out-dir", help="Path to the Output directory (default: Current Directory)"),
 
@@ -95,6 +98,12 @@ def metadata(
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
                         export_db=export_db, force=force)
         fic.export_db_as_json()
+
+    if input_db and migrate_db:
+        fic = FetchData(debug=debug, automated=automated,
+                        out_dir=out_dir, input_db=input_db, update_db=update_db,
+                        export_db=export_db, force=force)
+        fic.migrate_db()
 
     if version is True:
         typer.echo("fichub-cli-metadata: v0.1.3")
