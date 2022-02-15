@@ -106,10 +106,9 @@ def dump_json(db: Session, input_db, json_file: str, debug: bool):
         all_rows = get_all_rows(db)
     except OperationalError:
         db_not_found_log(debug, input_db)
-        sys.exit()
+        sys.exit(1)
 
     sql_to_json(json_file, all_rows, debug)
-    db.commit()
 
 
 def get_all_rows(db: Session):

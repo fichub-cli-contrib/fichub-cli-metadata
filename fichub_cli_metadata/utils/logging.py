@@ -26,7 +26,7 @@ def meta_fetched_log(debug: bool, url: str):
 
 def db_not_found_log(debug: bool, input_db: str):
     tqdm.write(
-        Fore.RED + f"Unable to open database file: {input_db}\nPlease recheck the filename!")
+        Fore.RED + f"Unable to open database file: {input_db}\nPlease recheck the filename/filepath!")
     if debug:
         logger.error(
-            f"Unable to open database file: {input_db}\nPlease recheck the filename!")
+            f"Unable to open database file: {input_db}\nPlease recheck the filename/filepath!")

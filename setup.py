@@ -17,16 +17,16 @@ setup(
         include=['fichub_cli_metadata', 'fichub_cli_metadata.*']),
     include_package_data=True,
     install_requires=[
-        'fichub-cli>=0.5.2',
+        'fichub-cli>=0.5.3',
         'sqlalchemy>=1.4.31'
     ],
     entry_points='''
         [console_scripts]
-        fichub_cli_metadata=fichub_cli_metadata.cli:app
+        fichub_cli_metadata=fichub_cli_metadata.cli:main
     ''',
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: Apache License",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
 )
