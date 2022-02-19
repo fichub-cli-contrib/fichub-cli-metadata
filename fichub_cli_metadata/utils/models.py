@@ -21,10 +21,10 @@ Base = declarative_base()
 class Metadata(Base):
     __tablename__ = "fichub_metadata"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     fichub_id = Column(String)
     title = Column(String)
-    author = Column(String)
+    author = Column(String, index=True)
     chapters = Column(Integer)
     created = Column(String)
     description = Column(String)

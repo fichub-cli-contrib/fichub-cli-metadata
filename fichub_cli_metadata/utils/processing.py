@@ -48,7 +48,7 @@ def process_extraMeta(extraMeta: str):
         extraMeta = extraMeta.split('-')
     except AttributeError:
         tqdm.write(Fore.RED +
-                   "extraMetadata not found. Adding Null for missing fields.\n")
+                   "'extraMetadata' key not found in the API response. Adding Null for missing fields.")
         extraMeta = ['']
         pass
 

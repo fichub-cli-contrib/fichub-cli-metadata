@@ -32,17 +32,17 @@ from .processing import init_database, get_db, object_as_dict, \
     list_diff
 
 from fichub_cli.utils.logging import download_processing_log
-from fichub_cli.utils.processing import check_url
-
+from fichub_cli.utils.processing import check_url, save_data
 
 bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt}, {rate_fmt}{postfix}, ETA: {remaining}"
 console = Console()
 
 
 class FetchData:
-    def __init__(self, out_dir="", input_db="", update_db=False,
+    def __init__(self, out_dir="", input_db="", update_db=False, format_type=None,
                  export_db=False, debug=False, automated=False, force=False):
         self.out_dir = out_dir
+        self.format_type = format_type
         self.input_db = input_db
         self.update_db = update_db
         self.export_db = export_db
@@ -126,7 +126,16 @@ class FetchData:
 
                             fic = FicHub(self.debug, self.automated,
                                          self.exit_status)
-                            fic.get_fic_Metadata(url)
+                            fic.get_fic_metadata(url, self.format_type)
+
+                            # if --download-ebook flag used
+                            if self.format_type is not None:
+                                self.exit_status = save_data(
+                                    self.out_dir, fic.file_name,
+                                    fic.download_url, self.debug, self.force,
+                                    fic.cache_hash, self.exit_status,
+                                    self.automated)
+
                             if fic.fic_metadata:
                                 meta_fetched_log(self.debug, url)
                                 self.save_to_db(fic.fic_metadata)
@@ -199,9 +208,18 @@ class FetchData:
             for row in all_rows:
                 row_dict = object_as_dict(row)
                 pbar.update(1)
+
                 fic = FicHub(self.debug, self.automated,
                              self.exit_status)
-                fic.get_fic_Metadata(row_dict['source'])
+                fic.get_fic_metadata(row_dict['source'], self.format_type)
+
+                # if --download-ebook flag used
+                if self.format_type is not None:
+                    self.exit_status = save_data(
+                        self.out_dir, fic.file_name,
+                        fic.download_url, self.debug, self.force,
+                        fic.cache_hash, self.exit_status,
+                        self.automated)
 
                 if fic.fic_metadata:
                     meta_fetched_log(self.debug, row_dict['source'])

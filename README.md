@@ -33,14 +33,17 @@ Usage: fichub_cli metadata [OPTIONS] COMMAND [ARGS]...
 Options:
   -i, --input TEXT          Input: Either an URL or path to a file
   --input-db TEXT           Use an existing sqlite db
-  --update-db               Update existing db (--input-db required)
+  --update-db               Self-Update existing db (--input-db required)
   --export-db               Export the existing db as json (--input-db
                             required)
-  -o,  --out-dir TEXT       Path to the Output directory (default: Current
+  --migrate-db              Migrate to new db schema (--input-db required)
+  -o, --out-dir TEXT        Path to the Output directory (default: Current
                             Directory)
-  -d,  --debug              Show the log in the console for debugging
-  --log / --no-log          Save the logfile for debugging  [default: no-
-                            log]
+  --download-ebook TEXT     Download the ebook as well. Specify the format:
+                            epub (default), mobi, pdf or html
+  --force                   Force update the metadata
+  -d, --debug               Show the log in the console for debugging
+  --log / --no-log          Save the logfile for debugging  [default: no-log]
   --version / --no-version  Display version & quit  [default: no-version]
   --help                    Show this message and exit.
 ```
@@ -100,6 +103,12 @@ fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --export-db
 
 ```
 fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --migrate-db
+```
+
+- To download the ebook along with the metadata
+
+```
+fichub_cli metadata -i urls.txt --download-ebook epub
 ```
 
 # Links

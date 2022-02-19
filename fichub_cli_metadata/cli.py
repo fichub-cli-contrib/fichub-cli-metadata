@@ -20,6 +20,7 @@ from datetime import datetime
 from colorama import init, Fore, Style
 
 from .utils.fetch_data import FetchData
+from fichub_cli.utils.processing import get_format_type
 
 init(autoreset=True)  # colorama init
 timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")
@@ -48,6 +49,9 @@ def metadata(
 
     out_dir: str = typer.Option(
         "", "-o", "--out-dir", help="Path to the Output directory (default: Current Directory)"),
+
+    download_ebook: str = typer.Option(
+        "", "--download-ebook", help="Download the ebook as well. Specify the format: epub (default), mobi, pdf or html"),
 
     force: bool = typer.Option(
         False, "--force", help="Force update the metadata", is_flag=True),
@@ -85,14 +89,19 @@ def metadata(
             Fore.GREEN + " in the current directory!" + Style.RESET_ALL)
         logger.add(f"fichub_cli - {timestamp}.log")
 
+    if not download_ebook == "":
+        format_type = get_format_type(download_ebook)
+    else:
+        format_type = None
+
     if input and not update_db:
-        fic = FetchData(debug=debug, automated=automated,
+        fic = FetchData(debug=debug, automated=automated, format_type=format_type,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
                         export_db=export_db, force=force)
         fic.save_metadata(input)
 
     if input_db and update_db:
-        fic = FetchData(debug=debug, automated=automated,
+        fic = FetchData(debug=debug, automated=automated, format_type=format_type,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
                         export_db=export_db, force=force)
         fic.update_metadata()
@@ -114,9 +123,9 @@ def metadata(
 
     try:
         if os.path.exists("output.log"):
-            rm_output_log = typer.prompt(
-                Fore.BLUE+"Delete the output.log?(y/n)")
-            if rm_output_log == 'y':
+            rm_output_log = typer.confirm(
+                Fore.BLUE+"Delete the output.log?", abort=True, show_default=True,)
+            if rm_output_log is True:
                 os.remove("output.log")
 
     # output.log doesnt exist, when run 1st time

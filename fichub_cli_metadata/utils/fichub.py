@@ -19,15 +19,16 @@ from colorama import Fore, Style
 from tqdm import tqdm
 from loguru import logger
 import time
+import re
 
-from fichub_cli.utils.fichub import retry_strategy
+from fichub_cli.utils.fichub import retry_strategy, FicHub as Fichub_Base
 
 headers = {
     'User-Agent': 'fichub_cli_metadata/0.1.3',
 }
 
 
-class FicHub:
+class FicHub(Fichub_Base):
     def __init__(self, debug, automated, exit_status):
         self.debug = debug
         self.automated = automated
@@ -37,9 +38,9 @@ class FicHub:
         self.http.mount("https://", adapter)
         self.http.mount("http://", adapter)
 
-    def get_fic_Metadata(self, url: str):
-        """ Send a GET request to the Fichub API and grab the
-            'meta' key
+    def get_fic_metadata(self, url: str, format_type: int = 0):
+        """ **OVERRIDING FUNCTION**\n
+        Sends GET request to Fichub API to fetch the metadata
         """
         params = {'q': url}
         if self.automated:  # for internal testing
@@ -69,8 +70,40 @@ class FicHub:
         try:
             self.response = response.json()
             self.fic_metadata = self.response['meta']
+            if format_type == 0:
+                cache_url = self.response['epub_url']
+                self.cache_hash = (
+                    re.search(r"\?h=(.*)", self.response['epub_url'])).group(1)
+                self.file_format = ".epub"
 
-        # if metadata not found
+            elif format_type == 1:
+                cache_url = self.response['mobi_url']
+                self.cache_hash = (
+                    re.search(r"\?h=(.*)", self.response['epub_url'])).group(1)
+                self.file_format = ".mobi"
+
+            elif format_type == 2:
+                cache_url = self.response['pdf_url']
+                self.cache_hash = (
+                    re.search(r"\?h=(.*)", self.response['epub_url'])).group(1)
+                self.file_format = ".pdf"
+
+            elif format_type == 3:
+                cache_url = self.response['html_url']
+                self.cache_hash = (
+                    re.search(r"\?h=(.*)", self.response['epub_url'])).group(1)
+                self.file_format = ".zip"
+
+            else:  # break the function if format_type is None
+                return
+
+            self.file_name = self.response['epub_url'].split(
+                "/")[4].split("?")[0]
+            self.file_name = self.file_name.replace(".epub", self.file_format)
+            self.download_url = "https://fichub.net"+cache_url
+
+        # Error: 'epub_url'
+        # Reason: Unsupported URL
         except (KeyError, UnboundLocalError) as e:
             if self.debug:
                 logger.error(str(e))
@@ -79,10 +112,13 @@ class FicHub:
                 file.write(url.strip()+"\n")
 
             self.exit_status = 1
-            self.fic_metadata = ""
-            tqdm.write(
-                Fore.RED + f"\nSkipping unsupported URL: {url}" +
-                Style.RESET_ALL + Fore.CYAN +
-                "\nTo see the supported site list, use " + Fore.YELLOW +
-                "fichub_cli -ss" + Style.RESET_ALL + Fore.CYAN +
-                "\nReport the error if the URL is supported!\n")
+            if self.debug:
+                logger.error(
+                    f"Skipping unsupported URL: {url}")
+            else:
+                tqdm.write(
+                    Fore.RED + f"\nSkipping unsupported URL: {url}" +
+                    Style.RESET_ALL + Fore.CYAN +
+                    "\nTo see the supported site list, use " + Fore.YELLOW +
+                    "fichub_cli -ss" + Style.RESET_ALL + Fore.CYAN +
+                    "\nReport the error if the URL is supported!\n")
