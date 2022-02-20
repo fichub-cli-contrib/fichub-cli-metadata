@@ -322,13 +322,14 @@ class FetchData:
             db_not_found_log(self.debug, self.db_file)
             sys.exit()
 
-    def get_urls_from_page(self, get_urls: str):
+    def fetch_urls_from_page(self, fetch_urls: str):
 
         if self.debug:
-            logger.debug("--get-urls flag used!")
+            logger.debug("--fetch-urls flag used!")
+            logger.info(f"Processing {fetch_urls}")
 
-        with console.status("[bold green]Processing..."):
-            response = requests.get(get_urls, timeout=(5, 300))
+        with console.status(f"[bold green]Processing {fetch_urls}"):
+            response = requests.get(fetch_urls, timeout=(5, 300))
 
             if self.debug:
                 logger.debug(f"GET: {response.status_code}: {response.url}")
@@ -336,7 +337,7 @@ class FetchData:
             html_page = BeautifulSoup(response.content, 'html.parser')
 
             found_flag = False
-            if re.search("https://archiveofourown.org/", get_urls):
+            if re.search("https://archiveofourown.org/", fetch_urls):
                 ao3_series_works_html = []
                 ao3_works_list = []
                 ao3_series_list = []
@@ -367,7 +368,11 @@ class FetchData:
                                f"\nFound {len(ao3_works_list)} works urls." +
                                Style.RESET_ALL)
                     ao3_works_list = '\n'.join(ao3_works_list)
-                    tqdm.write(ao3_works_list)
+                    tqdm.write(ao3_works_list + Fore.BLUE + "\n\nSaving the list to 'ao3_works_list.txt' in the current directory"
+                               + Style.RESET_ALL)
+
+                    with open("ao3_works_list.txt", "a") as f:
+                        f.write(ao3_works_list+"\n")
 
                 if ao3_series_list:
                     found_flag = True
@@ -375,7 +380,11 @@ class FetchData:
                                f"\nFound {len(ao3_series_list)} series urls." +
                                Style.RESET_ALL)
                     ao3_series_list = '\n'.join(ao3_series_list)
-                    tqdm.write(ao3_series_list)
+                    tqdm.write(ao3_series_list + Fore.BLUE + "\n\nSaving the list to 'ao3_series_list.txt' in the current directory"
+                               + Style.RESET_ALL)
+
+                    with open("ao3_series_list.txt", "a") as f:
+                        f.write(ao3_series_list+"\n")
 
             if found_flag is False:
                 tqdm.write(Fore.RED + "\nFound 0 urls.")

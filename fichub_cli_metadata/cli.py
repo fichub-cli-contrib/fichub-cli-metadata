@@ -53,8 +53,8 @@ def metadata(
     download_ebook: str = typer.Option(
         "", "--download-ebook", help="Download the ebook as well. Specify the format: epub (default), mobi, pdf or html"),
 
-    get_urls: str = typer.Option(
-        "", help="Get all story urls found from a page. Currently supports archiveofourown.org only"),
+    fetch_urls: str = typer.Option(
+        "", help="Fetch all story urls found from a page. Currently supports archiveofourown.org only"),
 
     force: bool = typer.Option(
         False, "--force", help="Force update the metadata", is_flag=True),
@@ -121,9 +121,9 @@ def metadata(
                         export_db=export_db, force=force)
         fic.migrate_db()
 
-    if get_urls:
-        fic = FetchData(debug=debug, automated=automated)
-        fic.get_urls_from_page(get_urls)
+    if fetch_urls:
+        fic = FetchData(debug=debug)
+        fic.fetch_urls_from_page(fetch_urls)
 
     if version is True:
         typer.echo("fichub-cli-metadata: v0.1.3")
