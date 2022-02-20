@@ -22,6 +22,9 @@ import typer
 from colorama import Fore, Style
 from loguru import logger
 from rich.console import Console
+import re
+import requests
+from bs4 import BeautifulSoup
 
 from sqlalchemy.orm import Session
 
@@ -318,3 +321,62 @@ class FetchData:
         except sqlalchemy.exc.OperationalError:
             db_not_found_log(self.debug, self.db_file)
             sys.exit()
+
+    def get_urls_from_page(self, get_urls: str):
+
+        if self.debug:
+            logger.debug("--get-urls flag used!")
+
+        with console.status("[bold green]Processing..."):
+            response = requests.get(get_urls, timeout=(5, 300))
+
+            if self.debug:
+                logger.debug(f"GET: {response.status_code}: {response.url}")
+
+            html_page = BeautifulSoup(response.content, 'html.parser')
+
+            found_flag = False
+            if re.search("https://archiveofourown.org/", get_urls):
+                ao3_series_works_html = []
+                ao3_works_list = []
+                ao3_series_list = []
+
+                ao3_series_works_html_h4 = html_page.find_all(
+                    'h4', attrs={'class': 'heading'})
+
+                for i in ao3_series_works_html_h4:
+                    ao3_series_works_html.append(i)
+
+                ao3_series_works_html = ""
+                for i in ao3_series_works_html_h4:
+                    ao3_series_works_html += str(i)
+
+                ao3_urls = BeautifulSoup(ao3_series_works_html, 'html.parser')
+
+                for tag in ao3_urls.find_all('a', {'href': re.compile('/works/')}):
+                    ao3_works_list.append(
+                        "https://archiveofourown.org"+tag['href'])
+
+                for tag in ao3_urls.find_all('a', {'href': re.compile('/series/')}):
+                    ao3_series_list.append(
+                        "https://archiveofourown.org"+tag['href'])
+
+                if ao3_works_list:
+                    found_flag = True
+                    tqdm.write(Fore.GREEN +
+                               f"\nFound {len(ao3_works_list)} works urls." +
+                               Style.RESET_ALL)
+                    ao3_works_list = '\n'.join(ao3_works_list)
+                    tqdm.write(ao3_works_list)
+
+                if ao3_series_list:
+                    found_flag = True
+                    tqdm.write(Fore.GREEN +
+                               f"\nFound {len(ao3_series_list)} series urls." +
+                               Style.RESET_ALL)
+                    ao3_series_list = '\n'.join(ao3_series_list)
+                    tqdm.write(ao3_series_list)
+
+            if found_flag is False:
+                tqdm.write(Fore.RED + "\nFound 0 urls.")
+                self.exit_status = 1

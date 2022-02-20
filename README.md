@@ -41,6 +41,8 @@ Options:
                             Directory)
   --download-ebook TEXT     Download the ebook as well. Specify the format:
                             epub (default), mobi, pdf or html
+  --get-urls TEXT           Get all story urls found from a page. Currently
+                            supports archiveofourown.org only
   --force                   Force update the metadata
   -d, --debug               Show the log in the console for debugging
   --log / --no-log          Save the logfile for debugging  [default: no-log]
@@ -109,6 +111,12 @@ fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --migrate-db
 
 ```
 fichub_cli metadata -i urls.txt --download-ebook epub
+```
+
+- To get all story urls found from a page. Currently supports archiveofourown.org only.
+
+```
+fichub_cli --get-urls https://archiveofourown.org/users/flamethrower/
 ```
 
 # Links
