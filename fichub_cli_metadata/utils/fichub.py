@@ -108,7 +108,7 @@ class FicHub(Fichub_Base):
             if self.debug:
                 logger.error(str(e))
 
-            with open("metadata_not_found.log", "a") as file:
+            with open("err.log", "a") as file:
                 file.write(url.strip()+"\n")
 
             self.exit_status = 1

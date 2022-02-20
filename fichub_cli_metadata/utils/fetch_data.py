@@ -107,7 +107,6 @@ class FetchData:
 
                 for url in urls:
                     download_processing_log(self.debug, url)
-                    pbar.update(1)
                     supported_url, self.exit_status = check_url(
                         url, self.debug, self.exit_status)
 
@@ -128,26 +127,37 @@ class FetchData:
                                          self.exit_status)
                             fic.get_fic_metadata(url, self.format_type)
 
-                            # if --download-ebook flag used
-                            if self.format_type is not None:
-                                self.exit_status = save_data(
-                                    self.out_dir, fic.file_name,
-                                    fic.download_url, self.debug, self.force,
-                                    fic.cache_hash, self.exit_status,
-                                    self.automated)
+                            try:
+                                # if --download-ebook flag used
+                                if self.format_type is not None:
+                                    self.exit_status = save_data(
+                                        self.out_dir, fic.file_name,
+                                        fic.download_url, self.debug, self.force,
+                                        fic.cache_hash, self.exit_status,
+                                        self.automated)
 
-                            if fic.fic_metadata:
-                                meta_fetched_log(self.debug, url)
-                                self.save_to_db(fic.fic_metadata)
+                                if fic.fic_metadata:
+                                    meta_fetched_log(self.debug, url)
+                                    self.save_to_db(fic.fic_metadata)
 
-                                # update the exit status
-                                self.exit_status = fic.exit_status
-                            else:
+                                    # update the exit status
+                                    self.exit_status = fic.exit_status
+                                else:
+                                    self.exit_status = 1
+                                    supported_url = None
+                                pbar.update(1)
+
+                            # if fic doesnt exist or the data is not fetched by the API yet
+                            except AttributeError:
+                                with open("err.log", "a") as file:
+                                    file.write(url.strip()+"\n")
                                 self.exit_status = 1
-                                supported_url = None
+                                pbar.update(1)
+                                pass  # skip the unsupported url
                         else:
                             self.exit_status = 1
                             supported_url = None
+                            pbar.update(1)
                             if self.debug:
                                 logger.info(
                                     "Metadata already exists. Skipping. Use --force to force-update existing data.")
@@ -207,26 +217,35 @@ class FetchData:
 
             for row in all_rows:
                 row_dict = object_as_dict(row)
-                pbar.update(1)
 
                 fic = FicHub(self.debug, self.automated,
                              self.exit_status)
                 fic.get_fic_metadata(row_dict['source'], self.format_type)
 
-                # if --download-ebook flag used
-                if self.format_type is not None:
-                    self.exit_status = save_data(
-                        self.out_dir, fic.file_name,
-                        fic.download_url, self.debug, self.force,
-                        fic.cache_hash, self.exit_status,
-                        self.automated)
+                try:
+                    # if --download-ebook flag used
+                    if self.format_type is not None:
+                        self.exit_status = save_data(
+                            self.out_dir, fic.file_name,
+                            fic.download_url, self.debug, self.force,
+                            fic.cache_hash, self.exit_status,
+                            self.automated)
 
-                if fic.fic_metadata:
-                    meta_fetched_log(self.debug, row_dict['source'])
-                    self.exit_status = crud.update_data(
-                        self.db, fic.fic_metadata, self.debug)
-                else:
+                    if fic.fic_metadata:
+                        meta_fetched_log(self.debug, row_dict['source'])
+                        self.exit_status = crud.update_data(
+                            self.db, fic.fic_metadata, self.debug)
+                    else:
+                        self.exit_status = 1
+                    pbar.update(1)
+
+                # if fic doesnt exist or the data is not fetched by the API yet
+                except AttributeError:
+                    with open("err.log", "a") as file:
+                        file.write(row_dict['source']+"\n")
                     self.exit_status = 1
+                    pbar.update(1)
+                    pass  # skip the unsupported url
 
     def export_db_as_json(self):
         _, file_name = os.path.split(self.input_db)
