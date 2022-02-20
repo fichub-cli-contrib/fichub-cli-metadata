@@ -210,17 +210,38 @@ class FetchData:
             db_not_found_log(self.debug, self.db_file)
             sys.exit()
 
+        # get the urls from the db
+        urls_input = []
+        for row in all_rows:
+            row_dict = object_as_dict(row)
+            urls_input.append(row_dict['source'])
+
+        try:
+
+            urls_output = []
+            if os.path.exists("output.log"):
+                with open("output.log", "r") as f:
+                    urls_output = f.read().splitlines()
+
+            urls = list_diff(urls_input, urls_output)
+
+        # if output.log doesnt exist, when run 1st time
+        except FileNotFoundError:
+            urls = urls_input
+
         # backup the db before changing the data
         self.db_backup()
-        with tqdm(total=len(all_rows), ascii=False,
+        with tqdm(total=len(urls), ascii=False,
                   unit="url", bar_format=bar_format) as pbar:
 
-            for row in all_rows:
-                row_dict = object_as_dict(row)
+            for url in urls:
+
+                with open("output.log", "a") as file:
+                    file.write(f"{url}\n")
 
                 fic = FicHub(self.debug, self.automated,
                              self.exit_status)
-                fic.get_fic_metadata(row_dict['source'], self.format_type)
+                fic.get_fic_metadata(url, self.format_type)
 
                 try:
                     # if --download-ebook flag used
@@ -232,7 +253,7 @@ class FetchData:
                             self.automated)
 
                     if fic.fic_metadata:
-                        meta_fetched_log(self.debug, row_dict['source'])
+                        meta_fetched_log(self.debug, url)
                         self.exit_status = crud.update_data(
                             self.db, fic.fic_metadata, self.debug)
                     else:
@@ -242,7 +263,7 @@ class FetchData:
                 # if fic doesnt exist or the data is not fetched by the API yet
                 except AttributeError:
                     with open("err.log", "a") as file:
-                        file.write(row_dict['source']+"\n")
+                        file.write(url+"\n")
                     self.exit_status = 1
                     pbar.update(1)
                     pass  # skip the unsupported url
@@ -274,8 +295,8 @@ class FetchData:
             backup_out_dir, f"{db_name}.old.sqlite"))
 
         if self.debug:
-            logger.info(f"Created backup db at {db_name}.old.sqlite")
-        tqdm.write(Fore.BLUE + f"Created backup db as {db_name}.old.sqlite")
+            logger.info(f"Created backup db '{db_name}.old.sqlite'")
+        tqdm.write(Fore.BLUE + f"Created backup db '{db_name}.old.sqlite'")
 
     def migrate_db(self):
         """ Migrates the db from old db schema to the new one
