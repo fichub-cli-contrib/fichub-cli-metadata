@@ -18,20 +18,21 @@ from fichub_cli_metadata import __version__
 
 
 def test_cli_url_input(tmpdir):
+    print("----------------------------------------")
     runner = CliRunner()
-
     with runner.isolated_filesystem():
         result = runner.invoke(app, [
-            '-ai', 'https://www.fanfiction.net/s/12933896/1/Things-you-cannot-leave-behind'])
+            '-ai', 'https://www.fanfiction.net/s/12933896/1/Things-you-cannot-leave-behind', '-d'])
 
     assert not result.exception
     assert result.exit_code == 0
 
 
 def test_cli_version():
+    print("----------------------------------------")
     runner = CliRunner()
-
     result = runner.invoke(app, ['--version'])
+    
     assert not result.exception
     assert result.exit_code == 0
     assert result.output.strip() == 'fichub-cli-metadata: v0.1.3'

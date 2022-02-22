@@ -164,10 +164,3 @@ def object_as_dict(obj):
     """
     return {c.key: getattr(obj, c.key)
             for c in inspect(obj).mapper.column_attrs}
-
-
-def list_diff(li1, li2):
-    """ Make a list containing the difference between
-        two lists
-    """
-    return list(set(li1) - set(li2)) + list(set(li2) - set(li1))

@@ -31,11 +31,10 @@ from sqlalchemy.orm import Session
 from .fichub import FicHub
 from .logging import meta_fetched_log, db_not_found_log
 from . import models, crud
-from .processing import init_database, get_db, object_as_dict, \
-    list_diff
+from .processing import init_database, get_db, object_as_dict
 
 from fichub_cli.utils.logging import download_processing_log
-from fichub_cli.utils.processing import check_url, save_data
+from fichub_cli.utils.processing import check_url, save_data,
 
 bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt}, {rate_fmt}{postfix}, ETA: {remaining}"
 console = Console()
@@ -76,12 +75,7 @@ class FetchData:
             urls_input = [input]
 
         try:
-            urls_output = []
-            if os.path.exists("output.log"):
-                with open("output.log", "r") as f:
-                    urls_output = f.read().splitlines()
-
-            urls = list_diff(urls_input, urls_output)
+            urls = check_output_log(urls_input, self.debug)
 
         # if output.log doesnt exist, when run 1st time
         except FileNotFoundError:
@@ -121,11 +115,8 @@ class FetchData:
                                 models.Metadata.source == url).first()
                         else:
                             exists = None
+
                         if not exists or self.force:
-
-                            with open("output.log", "a") as file:
-                                file.write(f"{url}\n")
-
                             fic = FicHub(self.debug, self.automated,
                                          self.exit_status)
                             fic.get_fic_metadata(url, self.format_type)
@@ -139,15 +130,20 @@ class FetchData:
                                         fic.cache_hash, self.exit_status,
                                         self.automated)
 
+                                # save the data to db
                                 if fic.fic_metadata:
                                     meta_fetched_log(self.debug, url)
                                     self.save_to_db(fic.fic_metadata)
+
+                                    with open("output.log", "a") as file:
+                                        file.write(f"{url}\n")
 
                                     # update the exit status
                                     self.exit_status = fic.exit_status
                                 else:
                                     self.exit_status = 1
                                     supported_url = None
+
                                 pbar.update(1)
 
                             # if fic doesnt exist or the data is not fetched by the API yet
@@ -220,13 +216,7 @@ class FetchData:
             urls_input.append(row_dict['source'])
 
         try:
-
-            urls_output = []
-            if os.path.exists("output.log"):
-                with open("output.log", "r") as f:
-                    urls_output = f.read().splitlines()
-
-            urls = list_diff(urls_input, urls_output)
+            urls = check_output_log(urls_input, self.debug)
 
         # if output.log doesnt exist, when run 1st time
         except FileNotFoundError:
@@ -238,10 +228,6 @@ class FetchData:
                   unit="url", bar_format=bar_format) as pbar:
 
             for url in urls:
-
-                with open("output.log", "a") as file:
-                    file.write(f"{url}\n")
-
                 fic = FicHub(self.debug, self.automated,
                              self.exit_status)
                 fic.get_fic_metadata(url, self.format_type)
@@ -255,12 +241,17 @@ class FetchData:
                             fic.cache_hash, self.exit_status,
                             self.automated)
 
+                    # update the metadata
                     if fic.fic_metadata:
                         meta_fetched_log(self.debug, url)
                         self.exit_status = crud.update_data(
                             self.db, fic.fic_metadata, self.debug)
+
+                        with open("output.log", "a") as file:
+                            file.write(f"{url}\n")
                     else:
                         self.exit_status = 1
+
                     pbar.update(1)
 
                 # if fic doesnt exist or the data is not fetched by the API yet
