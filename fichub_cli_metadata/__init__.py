@@ -12,4 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .cli import app
+# __version__ at the top to prevent ImportError: ... partially initialized module ...
+__version__ = "0.1.3"
+
+from .cli import app  # entry_point

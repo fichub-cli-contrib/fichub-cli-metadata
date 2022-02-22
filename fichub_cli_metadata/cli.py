@@ -126,18 +126,8 @@ def metadata(
         fic.fetch_urls_from_page(fetch_urls)
 
     if version is True:
-        typer.echo("fichub-cli-metadata: v0.1.3")
-
-    try:
-        if os.path.exists("output.log"):
-            rm_output_log = typer.confirm(
-                Fore.BLUE+"Delete the output.log?", abort=True, show_default=True,)
-            if rm_output_log is True:
-                os.remove("output.log")
-
-    # output.log doesnt exist, when run 1st time
-    except FileNotFoundError:
-        pass
+        from . import __version__
+        typer.echo(f"fichub-cli-metadata: v{__version__}")
 
     try:
         if fic.exit_status == 1:
@@ -146,6 +136,16 @@ def metadata(
                 "\nMetadata fetch failed for one or more URLs! Check " + Style.RESET_ALL +
                 Fore.YELLOW + "err.log" + Style.RESET_ALL + Fore.RED +
                 " in the current directory for urls!" + Style.RESET_ALL)
+
+        if os.path.exists("output.log"):
+            rm_output_log = typer.confirm(
+                Fore.BLUE+"Delete the output.log?", abort=False, show_default=True)
+            if rm_output_log is True:
+                os.remove("output.log")
+
         sys.exit(fic.exit_status)
-    except UnboundLocalError:
+
+    # FileNotFoundError: output.log doesnt exist, when run 1st time
+    # UnboundLocalError: 'fic' is not assigned value for --version flag
+    except (FileNotFoundError, UnboundLocalError):
         sys.exit(0)

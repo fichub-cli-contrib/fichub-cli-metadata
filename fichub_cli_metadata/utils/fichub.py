@@ -22,9 +22,11 @@ import time
 import re
 
 from fichub_cli.utils.fichub import retry_strategy, FicHub as Fichub_Base
+from fichub_cli import __version__ as core_version
+from fichub_cli_metadata import __version__ as plugin_version
 
 headers = {
-    'User-Agent': 'fichub_cli_metadata/0.1.3',
+    'User-Agent': f'fichub_cli_metadata/{plugin_version} (fichub_cli: {core_version})',
 }
 
 

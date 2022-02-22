@@ -35,9 +35,9 @@ def insert_data(db: Session, item: dict, debug: bool):
         query = get_ins_query(item)
         db.add(query)
         if debug:
-            logger.info("Adding metadata.")
+            logger.info("Adding metadata to the database.")
         tqdm.write(Fore.GREEN +
-                   "Adding metadata.")
+                   "Adding metadata to the database.")
     else:
         if debug:
             logger.info(
@@ -58,9 +58,9 @@ def update_data(db: Session, item: dict, debug: bool):
         query = get_ins_query(item)
         db.add(query)
         if debug:
-            logger.info("Adding metadata.")
+            logger.info("Adding metadata to the database.")
         tqdm.write(Fore.GREEN +
-                   "Adding metadata.")
+                   "Adding metadata to the database.")
     else:
         rated, language, genre, characters, reviews, favs, follows = process_extraMeta(
             item['extraMeta'])
@@ -88,9 +88,10 @@ def update_data(db: Session, item: dict, debug: bool):
             }
         )
         if debug:
-            logger.info("Metadata already exists. Updating metadata.")
+            logger.info(
+                "Metadata already exists. Overwriting metadata to the database.")
         tqdm.write(Fore.GREEN +
-                   "Metadata already exists. Updating metadata.\n")
+                   "Metadata already exists. Overwriting metadata to the database.\n")
 
         db.commit()
         return 0  # exit code
