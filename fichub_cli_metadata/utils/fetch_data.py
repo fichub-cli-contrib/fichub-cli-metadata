@@ -34,7 +34,7 @@ from . import models, crud
 from .processing import init_database, get_db, object_as_dict
 
 from fichub_cli.utils.logging import download_processing_log
-from fichub_cli.utils.processing import check_url, save_data,
+from fichub_cli.utils.processing import check_url, save_data, check_output_log
 
 bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt}, {rate_fmt}{postfix}, ETA: {remaining}"
 console = Console()
@@ -108,7 +108,6 @@ class FetchData:
                         url, self.debug, self.exit_status)
 
                     if supported_url:
-
                         # check if url exists in db
                         if self.input_db:
                             exists = self.db.query(models.Metadata).filter(

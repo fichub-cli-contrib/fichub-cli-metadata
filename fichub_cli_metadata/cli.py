@@ -85,12 +85,13 @@ def metadata(
     Failed downloads will be saved in the `err.log` file in the current directory
     """
     if log is True:
-        # debug = True
+        logger.remove()  # remove all existing handlers
+        logger.add(f"fichub_cli - {timestamp}.log")
+        debug = True
         typer.echo(
             Fore.GREEN + "Creating " + Style.RESET_ALL + Fore.YELLOW +
             f"fichub_cli - {timestamp}.log" + Style.RESET_ALL +
             Fore.GREEN + " in the current directory!" + Style.RESET_ALL)
-        logger.add(f"fichub_cli - {timestamp}.log")
 
     if not download_ebook == "":
         format_type = get_format_type(download_ebook)

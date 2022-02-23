@@ -120,10 +120,9 @@ class FicHub(Fichub_Base):
             if self.debug:
                 logger.error(
                     f"Skipping unsupported URL: {url}")
-            else:
-                tqdm.write(
-                    Fore.RED + f"\nSkipping unsupported URL: {url}" +
-                    Style.RESET_ALL + Fore.CYAN +
-                    "\nTo see the supported site list, use " + Fore.YELLOW +
-                    "fichub_cli -ss" + Style.RESET_ALL + Fore.CYAN +
-                    "\nReport the error if the URL is supported!\n")
+            tqdm.write(
+                Fore.RED + f"\nSkipping unsupported URL: {url}" +
+                Style.RESET_ALL + Fore.CYAN +
+                "\nTo see the supported site list, use " + Fore.YELLOW +
+                "fichub_cli -ss" + Style.RESET_ALL + Fore.CYAN +
+                "\nReport the error if the URL is supported!\n")
