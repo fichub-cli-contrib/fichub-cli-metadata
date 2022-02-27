@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import datetime
+import typer
 from tqdm import tqdm
-from colorama import Fore
+from colorama import Fore, Style
 from loguru import logger
 import json
 from sqlalchemy import create_engine, inspect
@@ -126,8 +128,9 @@ def get_ins_query(item: dict):
         favs=favs,
         follows=follows,
         status=item['status'],
-        last_updated=item['updated'],
         words=item['words'],
+        fic_last_updated=item['updated'],
+        db_last_updated=datetime.now().astimezone().strftime('%Y-%m-%dT%H:%M:%S%z'),
         source=item['source']
 
     )
@@ -164,3 +167,24 @@ def object_as_dict(obj):
     """
     return {c.key: getattr(obj, c.key)
             for c in inspect(obj).mapper.column_attrs}
+
+
+def prompt_migration_menu():
+    try:
+        migration_type = int(typer.prompt(
+            f"""
+    {Style.BRIGHT}Migration Menu{Style.RESET_ALL}
+    1) Add fichub_id column
+    2) Add db_last_updated column
+
+    Do the migration sequentially, i.e 1 → 2 → 3 ... , since each migration will overwrite the table.
+    A backup db called "old.sqlite" will be created so your data will be safe regardless.
+    """))
+
+        if migration_type > 2:
+            raise ValueError
+        return migration_type
+
+    except ValueError:  # if non-integer
+        tqdm.write(Fore.RED + "Invalid option. Quiting!")
+        exit(1)

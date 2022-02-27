@@ -20,6 +20,7 @@ from datetime import datetime
 from colorama import init, Fore, Style
 
 from .utils.fetch_data import FetchData
+from .utils.processing import prompt_migration_menu
 from fichub_cli.utils.processing import get_format_type
 
 init(autoreset=True)  # colorama init
@@ -55,6 +56,9 @@ def metadata(
 
     fetch_urls: str = typer.Option(
         "", help="Fetch all story urls found from a page. Currently supports archiveofourown.org only"),
+
+    verbose: bool = typer.Option(
+        False, "-v", "--verbose", help="Show fic stats", is_flag=True),
 
     force: bool = typer.Option(
         False, "--force", help="Force update the metadata", is_flag=True),
@@ -101,26 +105,27 @@ def metadata(
     if input and not update_db:
         fic = FetchData(debug=debug, automated=automated, format_type=format_type,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
-                        export_db=export_db, force=force)
+                        export_db=export_db, force=force, verbose=verbose)
         fic.save_metadata(input)
 
     if input_db and update_db:
         fic = FetchData(debug=debug, automated=automated, format_type=format_type,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
-                        export_db=export_db, force=force)
+                        export_db=export_db, force=force, verbose=verbose)
         fic.update_metadata()
 
     if export_db:
         fic = FetchData(debug=debug, automated=automated,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
-                        export_db=export_db, force=force)
+                        export_db=export_db, force=force, verbose=verbose)
         fic.export_db_as_json()
 
     if input_db and migrate_db:
         fic = FetchData(debug=debug, automated=automated,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
-                        export_db=export_db, force=force)
-        fic.migrate_db()
+                        export_db=export_db, force=force, verbose=verbose)
+        migrate_type = prompt_migration_menu()
+        fic.migrate_db(migrate_type)
 
     if fetch_urls:
         fic = FetchData(debug=debug)

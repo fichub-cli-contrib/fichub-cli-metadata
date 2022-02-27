@@ -16,7 +16,6 @@ import os
 import sys
 import shutil
 from datetime import datetime
-import sqlalchemy
 from tqdm import tqdm
 import typer
 from colorama import Fore, Style
@@ -26,6 +25,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from .fichub import FicHub
@@ -33,7 +33,7 @@ from .logging import meta_fetched_log, db_not_found_log
 from . import models, crud
 from .processing import init_database, get_db, object_as_dict
 
-from fichub_cli.utils.logging import download_processing_log
+from fichub_cli.utils.logging import download_processing_log, verbose_log
 from fichub_cli.utils.processing import check_url, save_data, check_output_log
 
 bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt}, {rate_fmt}{postfix}, ETA: {remaining}"
@@ -42,12 +42,13 @@ console = Console()
 
 class FetchData:
     def __init__(self, out_dir="", input_db="", update_db=False, format_type=None,
-                 export_db=False, debug=False, automated=False, force=False):
+                 export_db=False, verbose=False, debug=False, automated=False, force=False):
         self.out_dir = out_dir
         self.format_type = format_type
         self.input_db = input_db
         self.update_db = update_db
         self.export_db = export_db
+        self.verbose = verbose
         self.force = force
         self.debug = debug
         self.automated = automated
@@ -120,6 +121,9 @@ class FetchData:
                                          self.exit_status)
                             fic.get_fic_metadata(url, self.format_type)
 
+                            if self.verbose:
+                                verbose_log(self.debug, fic)
+
                             try:
                                 # if --download-ebook flag used
                                 if self.format_type is not None:
@@ -177,7 +181,9 @@ class FetchData:
         """
         try:
             models.Base.metadata.create_all(bind=self.engine)
-        except sqlalchemy.exc.OperationalError:
+        except OperationalError as e:
+            if self.debug:
+                logger.info(Fore.RED + str(e))
             db_not_found_log(self.debug, self.db_file)
             sys.exit()
 
@@ -204,7 +210,9 @@ class FetchData:
         tqdm.write(Fore.GREEN + "Getting all rows from database.")
         try:
             all_rows = crud.get_all_rows(self.db)
-        except sqlalchemy.exc.OperationalError:
+        except OperationalError as e:
+            if self.debug:
+                logger.info(Fore.RED + str(e))
             db_not_found_log(self.debug, self.db_file)
             sys.exit()
 
@@ -230,6 +238,9 @@ class FetchData:
                 fic = FicHub(self.debug, self.automated,
                              self.exit_status)
                 fic.get_fic_metadata(url, self.format_type)
+
+                if self.verbose:
+                    verbose_log(self.debug, fic)
 
                 try:
                     # if --download-ebook flag used
@@ -284,14 +295,15 @@ class FetchData:
         """
         backup_out_dir, file_name = os.path.split(self.db_file)
         db_name = os.path.splitext(file_name)[0]
-        shutil.copy(self.db_file, os.path.join(
-            backup_out_dir, f"{db_name}.old.sqlite"))
+        backup_db_path = os.path.join(
+            backup_out_dir, f"{db_name}.old.sqlite")
+        shutil.copy(self.db_file, backup_db_path)
 
         if self.debug:
-            logger.info(f"Created backup db '{db_name}.old.sqlite'")
-        tqdm.write(Fore.BLUE + f"Created backup db '{db_name}.old.sqlite'")
+            logger.info(f"Created backup db '{backup_db_path}'")
+        tqdm.write(Fore.BLUE + f"Created backup db '{backup_db_path}'")
 
-    def migrate_db(self):
+    def migrate_db(self, migrate_type: int):
         """ Migrates the db from old db schema to the new one
         """
         if os.path.isfile(self.input_db):
@@ -300,6 +312,7 @@ class FetchData:
         else:
             db_not_found_log(self.debug, self.input_db)
             sys.exit()
+
         # backup the db before migrating the data
         self.db_backup()
         self.db: Session = next(get_db(self.SessionLocal))
@@ -307,8 +320,16 @@ class FetchData:
             logger.info("Migrating the database.")
         tqdm.write(Fore.GREEN + "Migrating the database.")
         try:
-            crud.add_column(self.db)
-        except sqlalchemy.exc.OperationalError:
+            if migrate_type == 1:
+                crud.add_fichub_id_column(self.db)
+            elif migrate_type == 2:
+                crud.add_db_last_updated_column(self.db)
+            else:
+                tqdm.write(Fore.RED + "Invalid Migration option. Quiting!")
+
+        except OperationalError as e:
+            if self.debug:
+                logger.info(Fore.RED + str(e))
             db_not_found_log(self.debug, self.db_file)
             sys.exit()
 
