@@ -173,7 +173,7 @@ def prompt_migration_menu():
     try:
         migration_type = int(typer.prompt(
             f"""
-    {Style.BRIGHT}Migration Menu{Style.RESET_ALL}
+    {Style.BRIGHT}Migration Menu{Style.RESET_ALL}{Fore.BLUE}
     1) Add fichub_id column
     2) Add db_last_updated column
 
@@ -188,3 +188,8 @@ def prompt_migration_menu():
     except ValueError:  # if non-integer
         tqdm.write(Fore.RED + "Invalid option. Quiting!")
         exit(1)
+
+
+def prompt_user_contact():
+    tqdm.write(f"{Fore.BLUE}Please enter a contact email ID which will be appended to the user-agent so that AO3 can contact you if you send too mant requests at once. This will prevent you from getting IP banned so add a valid email ID.{Style.RESET_ALL}")
+    return typer.prompt("Contact")

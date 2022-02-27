@@ -26,7 +26,7 @@ from fichub_cli import __version__ as core_version
 from fichub_cli_metadata import __version__ as plugin_version
 
 headers = {
-    'User-Agent': f'fichub_cli_metadata/{plugin_version} (fichub_cli: {core_version})',
+    'User-Agent': f'fichub_cli_metadata/{plugin_version} (fichub_cli: {core_version})'
 }
 
 
