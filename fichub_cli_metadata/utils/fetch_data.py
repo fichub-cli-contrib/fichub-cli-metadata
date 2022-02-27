@@ -335,12 +335,18 @@ class FetchData:
 
     def fetch_urls_from_page(self, fetch_urls: str):
 
+        params = {
+            # 'view_full_work': 'true',
+            'view_adult': 'true'
+        }
+
         if self.debug:
             logger.debug("--fetch-urls flag used!")
             logger.info(f"Processing {fetch_urls}")
 
         with console.status(f"[bold green]Processing {fetch_urls}"):
-            response = requests.get(fetch_urls, timeout=(5, 300))
+            response = requests.get(
+                fetch_urls, timeout=(5, 300), params=params)
 
             if self.debug:
                 logger.debug(f"GET: {response.status_code}: {response.url}")
