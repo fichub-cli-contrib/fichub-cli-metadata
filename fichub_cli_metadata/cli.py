@@ -24,8 +24,6 @@ from .utils.processing import prompt_migration_menu
 from fichub_cli.utils.processing import get_format_type
 
 init(autoreset=True)  # colorama init
-timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")
-
 app = typer.Typer(add_completion=False)
 
 
@@ -89,6 +87,7 @@ def metadata(
     Failed downloads will be saved in the `err.log` file in the current directory
     """
     if log is True:
+        timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")
         logger.remove()  # remove all existing handlers
         logger.add(f"fichub_cli - {timestamp}.log")
         debug = True

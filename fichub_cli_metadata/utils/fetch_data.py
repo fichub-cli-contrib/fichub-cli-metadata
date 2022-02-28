@@ -30,9 +30,10 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from .fichub import FicHub
-from .logging import meta_fetched_log, db_not_found_log
+from .logging import meta_fetched_log, db_not_found_log, db_migration_failed_log
 from . import models, crud
 from .processing import init_database, get_db, object_as_dict, prompt_user_contact
+
 
 from fichub_cli.utils.logging import download_processing_log, verbose_log
 from fichub_cli.utils.processing import check_url, save_data, check_output_log
@@ -295,10 +296,11 @@ class FetchData:
     def db_backup(self):
         """ Creates a backup db in the same directory as the sqlite db
         """
+        timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")
         backup_out_dir, file_name = os.path.split(self.db_file)
         db_name = os.path.splitext(file_name)[0]
         backup_db_path = os.path.join(
-            backup_out_dir, f"{db_name}.old.sqlite")
+            backup_out_dir, f"{db_name}.old - {timestamp}.sqlite")
         shutil.copy(self.db_file, backup_db_path)
 
         if self.debug:
@@ -332,8 +334,8 @@ class FetchData:
         except OperationalError as e:
             if self.debug:
                 logger.info(Fore.RED + str(e))
-            db_not_found_log(self.debug, self.db_file)
-            sys.exit()
+            db_migration_failed_log(self.debug, self.db_file)
+            sys.exit(1)
 
     def fetch_urls_from_page(self, fetch_urls: str, user_contact: str = None):
 

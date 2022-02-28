@@ -175,8 +175,10 @@ def prompt_migration_menu():
             f"""
     {Style.BRIGHT}Migration Menu{Style.RESET_ALL}{Fore.BLUE}
     1) Add fichub_id column
-    2) Add db_last_updated column
+    2) Add db_last_updated column and rename last_updated to fic_last_updated column
 
+    Before doing any migrations, backup your db to a separate location since migration might make some changes which you would like to revert if it's not to your liking.
+    
     Do the migration sequentially, i.e 1 → 2 → 3 ... , since each migration will overwrite the table.
     A backup db called "old.sqlite" will be created so your data will be safe regardless.
     """))

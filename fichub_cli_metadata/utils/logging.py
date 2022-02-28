@@ -23,6 +23,14 @@ def meta_fetched_log(debug: bool, url: str):
     tqdm.write(Fore.GREEN + f"Metadata fetched for {url}")
 
 
+def db_migration_failed_log(debug: bool, input_db: str):
+    if debug:
+        logger.error(
+            f"Unable to do a migration on database file: '{input_db}'\nUse `--debug` flag for a more verbose error message!")
+    tqdm.write(
+        Fore.RED + f"Unable to do a migration on database file: '{input_db}'\nUse `--debug` flag for a more verbose error message!")
+
+
 def db_not_found_log(debug: bool, input_db: str):
     if debug:
         logger.error(
