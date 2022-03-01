@@ -195,7 +195,7 @@ def prompt_migration_menu():
 def prompt_user_contact():
     tqdm.write(f"""
 {Fore.BLUE}Please enter a contact email ID which will be included in the user-agent so that
-AO3 can contact you if you send too mant requests at once. This will probably prevent you 
-from getting IP banned since AO3 can contact you directly to resolve any issue. 
+AO3 can contact you to resolve any issues. AO3 staff advises that we should include the 
+contact email if we are going to send a lot of requests in a short period of time. 
 If you dont want to include any contact info, you can skip it by leaving it blank and pressing enter.{Style.RESET_ALL}""")
     return input("Contact: ")
