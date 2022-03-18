@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from datetime import datetime
-import typer
 from tqdm import tqdm
 from colorama import Fore, Style
 from loguru import logger
@@ -167,29 +166,6 @@ def object_as_dict(obj):
     """
     return {c.key: getattr(obj, c.key)
             for c in inspect(obj).mapper.column_attrs}
-
-
-def prompt_migration_menu():
-    try:
-        migration_type = int(typer.prompt(
-            f"""
-    {Style.BRIGHT}Migration Menu{Style.RESET_ALL}{Fore.BLUE}
-    1) Add fichub_id column
-    2) Add db_last_updated column and rename last_updated to fic_last_updated column
-
-    Before doing any migrations, backup your db to a separate location since migration might make some changes which you would like to revert if it's not to your liking.
-    
-    Do the migration sequentially, i.e 1 → 2 → 3 ... , since each migration will overwrite the table.
-    A backup db called "old.sqlite" will be created so your data will be safe regardless.
-    """))
-
-        if migration_type > 2:
-            raise ValueError
-        return migration_type
-
-    except ValueError:  # if non-integer
-        tqdm.write(Fore.RED + "Invalid option. Quiting!")
-        exit(1)
 
 
 def prompt_user_contact():

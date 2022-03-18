@@ -36,7 +36,6 @@ Options:
   --update-db               Self-Update existing db (--input-db required)
   --export-db               Export the existing db as json (--input-db
                             required)
-  --migrate-db              Migrate to new db schema (--input-db required)
   -o, --out-dir TEXT        Path to the Output directory (default: Current
                             Directory)
   --download-ebook TEXT     Download the ebook as well. Specify the format:
@@ -101,18 +100,6 @@ fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --update-db
 fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --export-db
 ```
 
-- To migrate an existing db to the new schema.
-
-```
-fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --migrate-db
-```
-
----
-
-Note: Using ` --migrate-db` will open up the "Migration Menu" and each migration is to be done sequentially, i.e 1 → 2 → 3 ..., since the migration wil overwrite the table. An `old.sqlite` will be created before a migration so you data _will_ be safe.
-
----
-
 - To download the ebook along with the metadata
 
 ```
@@ -124,6 +111,12 @@ fichub_cli metadata -i urls.txt --download-ebook epub
 ```
 fichub_cli metadata --fetch-urls https://archiveofourown.org/users/flamethrower/
 ```
+
+---
+
+Note: If there are any database schema changes, the CLI will automatically migrate the db. A `.pre.migration` sqlite file will be created which would be your original db before any migrations as backup.
+
+---
 
 # Links
 

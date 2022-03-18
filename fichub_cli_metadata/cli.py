@@ -20,8 +20,8 @@ from datetime import datetime
 from colorama import init, Fore, Style
 
 from .utils.fetch_data import FetchData
-from .utils.processing import prompt_migration_menu
 from fichub_cli.utils.processing import get_format_type
+
 
 init(autoreset=True)  # colorama init
 app = typer.Typer(add_completion=False)
@@ -83,6 +83,7 @@ def metadata(
 
     Failed downloads will be saved in the `err.log` file in the current directory
     """
+
     if log is True:
         timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")
         logger.remove()  # remove all existing handlers
@@ -105,6 +106,7 @@ def metadata(
         fic.save_metadata(input)
 
     if input_db and update_db:
+
         fic = FetchData(debug=debug, automated=automated, format_type=format_type,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
                         export_db=export_db, force=force, verbose=verbose)

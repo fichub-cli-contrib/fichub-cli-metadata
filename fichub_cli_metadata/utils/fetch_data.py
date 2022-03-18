@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from fichub_cli_metadata import __version__ as plugin_version
+from fichub_cli.utils.processing import check_url, save_data, check_output_log
+from fichub_cli.utils.logging import download_processing_log, verbose_log
+from .processing import init_database, get_db, object_as_dict,\
+    prompt_user_contact
+from . import models, crud
 import os
 import sys
 import shutil
@@ -30,14 +36,8 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from .fichub import FicHub
-from .logging import meta_fetched_log, db_not_found_log, db_migration_failed_log
-from . import models, crud
-from .processing import init_database, get_db, object_as_dict, prompt_user_contact
+from .logging import meta_fetched_log, db_not_found_log
 
-
-from fichub_cli.utils.logging import download_processing_log, verbose_log
-from fichub_cli.utils.processing import check_url, save_data, check_output_log
-from fichub_cli_metadata import __version__ as plugin_version
 
 bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt}, {rate_fmt}{postfix}, ETA: {remaining}"
 console = Console()
@@ -95,9 +95,14 @@ class FetchData:
         self.engine, self.SessionLocal = init_database(self.db_file)
         self.db: Session = next(get_db(self.SessionLocal))
 
+        # if a db is given as input, run migrations before any operations
+        if self.input_db:
+            # run db migrations
+            self.run_migrations()
+
         try:
             # backup the db before changing the data
-            self.db_backup()
+            self.db_backup("pre.update")
         except FileNotFoundError:
             # when run 1st time, no db exists
             pass
@@ -208,6 +213,13 @@ class FetchData:
             sys.exit()
 
         self.db: Session = next(get_db(self.SessionLocal))
+        # if a db is given as input, run migrations before any operations
+        if self.input_db:
+            # run db migrations
+            self.run_migrations()
+
+        # backup the db before changing the data
+        self.db_backup("pre.update")
         if self.debug:
             logger.info("Getting all rows from database.")
         tqdm.write(Fore.GREEN + "Getting all rows from database.")
@@ -232,8 +244,6 @@ class FetchData:
         except FileNotFoundError:
             urls = urls_input
 
-        # backup the db before changing the data
-        self.db_backup()
         with tqdm(total=len(urls), ascii=False,
                   unit="url", bar_format=bar_format) as pbar:
 
@@ -293,21 +303,21 @@ class FetchData:
             tqdm.write(Fore.RED +
                        "SQLite db is not found. Use an existing sqlite db using: --input-db ")
 
-    def db_backup(self):
+    def db_backup(self, suffix):
         """ Creates a backup db in the same directory as the sqlite db
         """
         timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")
         backup_out_dir, file_name = os.path.split(self.db_file)
         db_name = os.path.splitext(file_name)[0]
         backup_db_path = os.path.join(
-            backup_out_dir, f"{db_name}.old - {timestamp}.sqlite")
+            backup_out_dir, f"{db_name}.{suffix} - {timestamp}.sqlite")
         shutil.copy(self.db_file, backup_db_path)
 
         if self.debug:
             logger.info(f"Created backup db '{backup_db_path}'")
         tqdm.write(Fore.BLUE + f"Created backup db '{backup_db_path}'")
 
-    def migrate_db(self, migrate_type: int):
+    def run_migrations(self):
         """ Migrates the db from old db schema to the new one
         """
         if os.path.isfile(self.input_db):
@@ -317,24 +327,16 @@ class FetchData:
             db_not_found_log(self.debug, self.input_db)
             sys.exit()
 
-        # backup the db before migrating the data
-        self.db_backup()
         self.db: Session = next(get_db(self.SessionLocal))
-        if self.debug:
-            logger.info("Migrating the database.")
-        tqdm.write(Fore.GREEN + "Migrating the database.")
+
         try:
-            if migrate_type == 1:
-                crud.add_fichub_id_column(self.db)
-            elif migrate_type == 2:
-                crud.add_db_last_updated_column(self.db)
-            else:
-                tqdm.write(Fore.RED + "Invalid Migration option. Quiting!")
+            crud.add_fichub_id_column(self.db, self.db_backup, self.debug)
+            crud.add_db_last_updated_column(
+                self.db, self.db_backup, self.debug)
 
         except OperationalError as e:
             if self.debug:
                 logger.info(Fore.RED + str(e))
-            db_migration_failed_log(self.debug, self.db_file)
             sys.exit(1)
 
     def fetch_urls_from_page(self, fetch_urls: str, user_contact: str = None):

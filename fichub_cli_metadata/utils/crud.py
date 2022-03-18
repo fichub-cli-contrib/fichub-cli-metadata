@@ -121,26 +121,64 @@ def get_all_rows(db: Session):
     return db.query(models.Metadata).all()
 
 
-def add_fichub_id_column(db: Session):
+def add_fichub_id_column(db: Session, db_backup, debug: bool):
     """ To add a column AFTER an existing column
     """
+
     drop_TempFichubMetadata(db)
-    db.execute("ALTER TABLE fichub_metadata RENAME TO TempFichubMetadata;")
-    db.execute("CREATE TABLE fichub_metadata(id INTEGER NOT NULL, fichub_id VARCHAR(255),title VARCHAR(255), author VARCHAR(255), chapters INTEGER, created VARCHAR(255), description VARCHAR(255), rated VARCHAR(255), language VARCHAR(255), genre VARCHAR(255), characters VARCHAR(255), reviews INTEGER, favs INTEGER, follows INTEGER, status VARCHAR(255), words INTEGER, last_updated VARCHAR(255), source VARCHAR(255), PRIMARY KEY(id))")
-    db.execute("INSERT INTO fichub_metadata (id, title, author, chapters, created, description, rated, language, genre, characters, reviews, favs, follows, status, words, last_updated, source ) SELECT id, title, author, chapters, created, description, rated, language, genre, characters, reviews, favs, follows, status, words,last_updated, source FROM TempFichubMetadata;")
-    db.execute("DROP TABLE TempFichubMetadata;")
-    db.commit()
+    col_exists = False
+    try:
+        col_exists = db.execute("SELECT fichub_id from fichub_metadata;")
+        col_exists = True
+    except OperationalError as e:
+        if debug:
+            logger.error(e)
+        pass
+    if not col_exists:
+        tqdm.write(
+            Fore.GREEN + "Database Schema changes detected! Migrating the database.")
+        # backup the db before migrating the data
+        db_backup("pre.migration")
+
+        if debug:
+            logger.info("Migration: adding fichub_id column")
+        tqdm.write(Fore.GREEN + "Migration: adding fichub_id column")
+
+        db.execute("ALTER TABLE fichub_metadata RENAME TO TempFichubMetadata;")
+        db.execute("CREATE TABLE fichub_metadata(id INTEGER NOT NULL, fichub_id VARCHAR(255),title VARCHAR(255), author VARCHAR(255), chapters INTEGER, created VARCHAR(255), description VARCHAR(255), rated VARCHAR(255), language VARCHAR(255), genre VARCHAR(255), characters VARCHAR(255), reviews INTEGER, favs INTEGER, follows INTEGER, status VARCHAR(255), words INTEGER, last_updated VARCHAR(255), source VARCHAR(255), PRIMARY KEY(id))")
+        db.execute("INSERT INTO fichub_metadata (id, title, author, chapters, created, description, rated, language, genre, characters, reviews, favs, follows, status, words, last_updated, source ) SELECT id, title, author, chapters, created, description, rated, language, genre, characters, reviews, favs, follows, status, words,last_updated, source FROM TempFichubMetadata;")
+        db.execute("DROP TABLE TempFichubMetadata;")
+        db.commit()
 
 
-def add_db_last_updated_column(db: Session):
+def add_db_last_updated_column(db: Session, db_backup, debug: bool):
     """ To add a column AFTER an existing column
     """
+
     drop_TempFichubMetadata(db)
-    db.execute("ALTER TABLE fichub_metadata RENAME TO TempFichubMetadata;")
-    db.execute("CREATE TABLE fichub_metadata(id INTEGER NOT NULL, fichub_id VARCHAR(255), title VARCHAR(255), author VARCHAR(255), chapters INTEGER, created VARCHAR(255), description VARCHAR(255), rated VARCHAR(255), language VARCHAR(255), genre VARCHAR(255), characters VARCHAR(255), reviews INTEGER, favs INTEGER, follows INTEGER, status VARCHAR(255), words INTEGER, fic_last_updated VARCHAR(255), db_last_updated VARCHAR(255), source VARCHAR(255), PRIMARY KEY(id))")
-    db.execute("INSERT INTO fichub_metadata (id, fichub_id, title, author, chapters, created, description, rated, language, genre, characters, reviews, favs, follows, status,  words, fic_last_updated, source ) SELECT id, fichub_id, title, author, chapters, created, description, rated, language, genre, characters, reviews, favs, follows, status, words, last_updated, source FROM TempFichubMetadata;")
-    db.execute("DROP TABLE TempFichubMetadata;")
-    db.commit()
+    col_exists = False
+    try:
+        db.execute("SELECT db_last_updated from fichub_metadata;")
+        col_exists = True
+    except OperationalError as e:
+        if debug:
+            logger.error(e)
+        pass
+    if not col_exists:
+        tqdm.write(
+            Fore.GREEN + "Database Schema changes detected! Migrating the database.")
+        # backup the db before migrating the data
+        db_backup("pre.migration")
+
+        if debug:
+            logger.info("Migration: adding db_last_updated column")
+        tqdm.write(Fore.GREEN + "Migration: adding db_last_updated column")
+
+        db.execute("ALTER TABLE fichub_metadata RENAME TO TempFichubMetadata;")
+        db.execute("CREATE TABLE fichub_metadata(id INTEGER NOT NULL, fichub_id VARCHAR(255), title VARCHAR(255), author VARCHAR(255), chapters INTEGER, created VARCHAR(255), description VARCHAR(255), rated VARCHAR(255), language VARCHAR(255), genre VARCHAR(255), characters VARCHAR(255), reviews INTEGER, favs INTEGER, follows INTEGER, status VARCHAR(255), words INTEGER, fic_last_updated VARCHAR(255), db_last_updated VARCHAR(255), source VARCHAR(255), PRIMARY KEY(id))")
+        db.execute("INSERT INTO fichub_metadata (id, fichub_id, title, author, chapters, created, description, rated, language, genre, characters, reviews, favs, follows, status,  words, fic_last_updated, source ) SELECT id, fichub_id, title, author, chapters, created, description, rated, language, genre, characters, reviews, favs, follows, status, words, last_updated, source FROM TempFichubMetadata;")
+        db.execute("DROP TABLE TempFichubMetadata;")
+        db.commit()
 
 
 def drop_TempFichubMetadata(db: Session):
