@@ -10,13 +10,13 @@ To report issues for the CLI, open an issue at https://github.com/FicHub/fichub-
 
 # Installation
 
-## Using pip (Recommended)
+## From pip (Stable, recommended)
 
 ```
 pip install -U fichub-cli-metadata
 ```
 
-## From Source (Might have bugs, for testing only)
+## From Github Source (Pre-release, for testing new features by Beta testers)
 
 ```
 pip install git+https://github.com/fichub-cli-contrib/fichub-cli-metadata@main
@@ -36,7 +36,6 @@ Options:
   --update-db               Self-Update existing db (--input-db required)
   --export-db               Export the existing db as json (--input-db
                             required)
-  --migrate-db              Migrate to new db schema (--input-db required)
   -o, --out-dir TEXT        Path to the Output directory (default: Current
                             Directory)
   --download-ebook TEXT     Download the ebook as well. Specify the format:
@@ -101,12 +100,6 @@ fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --update-db
 fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --export-db
 ```
 
-- To migrate an existing db to the new schema
-
-```
-fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --migrate-db
-```
-
 - To download the ebook along with the metadata
 
 ```
@@ -118,6 +111,12 @@ fichub_cli metadata -i urls.txt --download-ebook epub
 ```
 fichub_cli metadata --fetch-urls https://archiveofourown.org/users/flamethrower/
 ```
+
+---
+
+Note: If there are any database schema changes, the CLI will automatically migrate the db. A `.pre.migration` sqlite file will be created which would be your original db before any migrations as backup.
+
+---
 
 # Links
 

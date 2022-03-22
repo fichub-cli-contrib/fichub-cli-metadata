@@ -36,6 +36,7 @@ class Metadata(Base):
     favs = Column(Integer)
     follows = Column(Integer)
     status = Column(String)
-    last_updated = Column(String)
     words = Column(Integer)
+    fic_last_updated = Column(String)
+    db_last_updated = Column(String)
     source = Column(String)

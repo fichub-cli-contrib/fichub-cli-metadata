@@ -12,11 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from fichub_cli_metadata import __version__ as plugin_version
+from fichub_cli.utils.processing import check_url, save_data, check_output_log
+from fichub_cli.utils.logging import download_processing_log, verbose_log
+from .processing import init_database, get_db, object_as_dict,\
+    prompt_user_contact
+from . import models, crud
 import os
 import sys
 import shutil
 from datetime import datetime
-import sqlalchemy
+import time
 from tqdm import tqdm
 import typer
 from colorama import Fore, Style
@@ -26,15 +32,12 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from .fichub import FicHub
 from .logging import meta_fetched_log, db_not_found_log
-from . import models, crud
-from .processing import init_database, get_db, object_as_dict
 
-from fichub_cli.utils.logging import download_processing_log
-from fichub_cli.utils.processing import check_url, save_data, check_output_log
 
 bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt}, {rate_fmt}{postfix}, ETA: {remaining}"
 console = Console()
@@ -42,12 +45,13 @@ console = Console()
 
 class FetchData:
     def __init__(self, out_dir="", input_db="", update_db=False, format_type=None,
-                 export_db=False, debug=False, automated=False, force=False):
+                 export_db=False, verbose=False, debug=False, automated=False, force=False):
         self.out_dir = out_dir
         self.format_type = format_type
         self.input_db = input_db
         self.update_db = update_db
         self.export_db = export_db
+        self.verbose = verbose
         self.force = force
         self.debug = debug
         self.automated = automated
@@ -91,9 +95,14 @@ class FetchData:
         self.engine, self.SessionLocal = init_database(self.db_file)
         self.db: Session = next(get_db(self.SessionLocal))
 
+        # if a db is given as input, run migrations before any operations
+        if self.input_db:
+            # run db migrations
+            self.run_migrations()
+
         try:
             # backup the db before changing the data
-            self.db_backup()
+            self.db_backup("pre.update")
         except FileNotFoundError:
             # when run 1st time, no db exists
             pass
@@ -119,6 +128,9 @@ class FetchData:
                             fic = FicHub(self.debug, self.automated,
                                          self.exit_status)
                             fic.get_fic_metadata(url, self.format_type)
+
+                            if self.verbose:
+                                verbose_log(self.debug, fic)
 
                             try:
                                 # if --download-ebook flag used
@@ -177,7 +189,9 @@ class FetchData:
         """
         try:
             models.Base.metadata.create_all(bind=self.engine)
-        except sqlalchemy.exc.OperationalError:
+        except OperationalError as e:
+            if self.debug:
+                logger.info(Fore.RED + str(e))
             db_not_found_log(self.debug, self.db_file)
             sys.exit()
 
@@ -199,12 +213,21 @@ class FetchData:
             sys.exit()
 
         self.db: Session = next(get_db(self.SessionLocal))
+        # if a db is given as input, run migrations before any operations
+        if self.input_db:
+            # run db migrations
+            self.run_migrations()
+
+        # backup the db before changing the data
+        self.db_backup("pre.update")
         if self.debug:
             logger.info("Getting all rows from database.")
         tqdm.write(Fore.GREEN + "Getting all rows from database.")
         try:
             all_rows = crud.get_all_rows(self.db)
-        except sqlalchemy.exc.OperationalError:
+        except OperationalError as e:
+            if self.debug:
+                logger.info(Fore.RED + str(e))
             db_not_found_log(self.debug, self.db_file)
             sys.exit()
 
@@ -221,8 +244,6 @@ class FetchData:
         except FileNotFoundError:
             urls = urls_input
 
-        # backup the db before changing the data
-        self.db_backup()
         with tqdm(total=len(urls), ascii=False,
                   unit="url", bar_format=bar_format) as pbar:
 
@@ -230,6 +251,9 @@ class FetchData:
                 fic = FicHub(self.debug, self.automated,
                              self.exit_status)
                 fic.get_fic_metadata(url, self.format_type)
+
+                if self.verbose:
+                    verbose_log(self.debug, fic)
 
                 try:
                     # if --download-ebook flag used
@@ -279,19 +303,21 @@ class FetchData:
             tqdm.write(Fore.RED +
                        "SQLite db is not found. Use an existing sqlite db using: --input-db ")
 
-    def db_backup(self):
+    def db_backup(self, suffix):
         """ Creates a backup db in the same directory as the sqlite db
         """
+        timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")
         backup_out_dir, file_name = os.path.split(self.db_file)
         db_name = os.path.splitext(file_name)[0]
-        shutil.copy(self.db_file, os.path.join(
-            backup_out_dir, f"{db_name}.old.sqlite"))
+        backup_db_path = os.path.join(
+            backup_out_dir, f"{db_name}.{suffix} - {timestamp}.sqlite")
+        shutil.copy(self.db_file, backup_db_path)
 
         if self.debug:
-            logger.info(f"Created backup db '{db_name}.old.sqlite'")
-        tqdm.write(Fore.BLUE + f"Created backup db '{db_name}.old.sqlite'")
+            logger.info(f"Created backup db '{backup_db_path}'")
+        tqdm.write(Fore.BLUE + f"Created backup db '{backup_db_path}'")
 
-    def migrate_db(self):
+    def run_migrations(self):
         """ Migrates the db from old db schema to the new one
         """
         if os.path.isfile(self.input_db):
@@ -300,26 +326,56 @@ class FetchData:
         else:
             db_not_found_log(self.debug, self.input_db)
             sys.exit()
-        # backup the db before migrating the data
-        self.db_backup()
-        self.db: Session = next(get_db(self.SessionLocal))
-        if self.debug:
-            logger.info("Migrating the database.")
-        tqdm.write(Fore.GREEN + "Migrating the database.")
-        try:
-            crud.add_column(self.db)
-        except sqlalchemy.exc.OperationalError:
-            db_not_found_log(self.debug, self.db_file)
-            sys.exit()
 
-    def fetch_urls_from_page(self, fetch_urls: str):
+        self.db: Session = next(get_db(self.SessionLocal))
+
+        try:
+            crud.add_fichub_id_column(self.db, self.db_backup, self.debug)
+            crud.add_db_last_updated_column(
+                self.db, self.db_backup, self.debug)
+
+        except OperationalError as e:
+            if self.debug:
+                logger.info(Fore.RED + str(e))
+            sys.exit(1)
+
+    def fetch_urls_from_page(self, fetch_urls: str, user_contact: str = None):
+
+        if user_contact is None:
+            user_contact = prompt_user_contact()
+
+        params = {
+            # 'view_full_work': 'true',
+            'view_adult': 'true'
+        }
+
+        headers = {
+            'User-Agent': f'Bot: fichub_cli_metadata/{plugin_version} (User: {user_contact}, Bot: https://github.com/fichub-cli-contrib/fichub-cli-metadata)'
+        }
 
         if self.debug:
             logger.debug("--fetch-urls flag used!")
             logger.info(f"Processing {fetch_urls}")
 
         with console.status(f"[bold green]Processing {fetch_urls}"):
-            response = requests.get(fetch_urls, timeout=(5, 300))
+            response = requests.get(
+                fetch_urls, timeout=(5, 300),
+                headers=headers, params=params)
+
+            if response.status_code == 429:
+                if self.debug:
+                    logger.error("HTTP Error 429: TooManyRequests")
+                    logger.debug("Sleeping for 30s")
+                tqdm.write("Too Many Requests!\nSleeping for 30s!\n")
+                time.sleep(30)
+
+                if self.debug:
+                    logger.info("Resuming downloads!")
+                tqdm.write("Resuming downloads!")
+
+                # retry GET request
+                response = requests.get(
+                    fetch_urls, timeout=(5, 300), params=params)
 
             if self.debug:
                 logger.debug(f"GET: {response.status_code}: {response.url}")
@@ -364,6 +420,8 @@ class FetchData:
                     with open("ao3_works_list.txt", "a") as f:
                         f.write(ao3_works_list+"\n")
 
+                    self.exit_status = 0
+
                 if ao3_series_list:
                     found_flag = True
                     tqdm.write(Fore.GREEN +
@@ -375,6 +433,8 @@ class FetchData:
 
                     with open("ao3_series_list.txt", "a") as f:
                         f.write(ao3_series_list+"\n")
+
+                    self.exit_status = 0
 
             if found_flag is False:
                 tqdm.write(Fore.RED + "\nFound 0 urls.")

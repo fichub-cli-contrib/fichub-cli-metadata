@@ -22,9 +22,8 @@ from colorama import init, Fore, Style
 from .utils.fetch_data import FetchData
 from fichub_cli.utils.processing import get_format_type
 
-init(autoreset=True)  # colorama init
-timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")
 
+init(autoreset=True)  # colorama init
 app = typer.Typer(add_completion=False)
 
 
@@ -44,9 +43,6 @@ def metadata(
     export_db: bool = typer.Option(
         False, "--export-db", help="Export the existing db as json (--input-db required)", is_flag=True),
 
-    migrate_db: bool = typer.Option(
-        False, "--migrate-db", help="Migrate to new db schema (--input-db required)", is_flag=True),
-
     out_dir: str = typer.Option(
         "", "-o", "--out-dir", help="Path to the Output directory (default: Current Directory)"),
 
@@ -55,6 +51,9 @@ def metadata(
 
     fetch_urls: str = typer.Option(
         "", help="Fetch all story urls found from a page. Currently supports archiveofourown.org only"),
+
+    verbose: bool = typer.Option(
+        False, "-v", "--verbose", help="Show fic stats", is_flag=True),
 
     force: bool = typer.Option(
         False, "--force", help="Force update the metadata", is_flag=True),
@@ -84,7 +83,9 @@ def metadata(
 
     Failed downloads will be saved in the `err.log` file in the current directory
     """
+
     if log is True:
+        timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")
         logger.remove()  # remove all existing handlers
         logger.add(f"fichub_cli - {timestamp}.log")
         debug = True
@@ -101,26 +102,21 @@ def metadata(
     if input and not update_db:
         fic = FetchData(debug=debug, automated=automated, format_type=format_type,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
-                        export_db=export_db, force=force)
+                        export_db=export_db, force=force, verbose=verbose)
         fic.save_metadata(input)
 
     if input_db and update_db:
+
         fic = FetchData(debug=debug, automated=automated, format_type=format_type,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
-                        export_db=export_db, force=force)
+                        export_db=export_db, force=force, verbose=verbose)
         fic.update_metadata()
 
     if export_db:
         fic = FetchData(debug=debug, automated=automated,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
-                        export_db=export_db, force=force)
+                        export_db=export_db, force=force, verbose=verbose)
         fic.export_db_as_json()
-
-    if input_db and migrate_db:
-        fic = FetchData(debug=debug, automated=automated,
-                        out_dir=out_dir, input_db=input_db, update_db=update_db,
-                        export_db=export_db, force=force)
-        fic.migrate_db()
 
     if fetch_urls:
         fic = FetchData(debug=debug)

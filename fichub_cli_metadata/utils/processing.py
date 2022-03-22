@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import datetime
 from tqdm import tqdm
-from colorama import Fore
+from colorama import Fore, Style
 from loguru import logger
 import json
 from sqlalchemy import create_engine, inspect
@@ -126,8 +127,9 @@ def get_ins_query(item: dict):
         favs=favs,
         follows=follows,
         status=item['status'],
-        last_updated=item['updated'],
         words=item['words'],
+        fic_last_updated=item['updated'],
+        db_last_updated=datetime.now().astimezone().strftime('%Y-%m-%dT%H:%M:%S%z'),
         source=item['source']
 
     )
@@ -164,3 +166,12 @@ def object_as_dict(obj):
     """
     return {c.key: getattr(obj, c.key)
             for c in inspect(obj).mapper.column_attrs}
+
+
+def prompt_user_contact():
+    tqdm.write(f"""
+{Fore.BLUE}Please enter a contact email ID which will be included in the user-agent so that
+AO3 can contact you to resolve any issues. AO3 staff advises that we should include the 
+contact email if we are going to send a lot of requests in a short period of time. 
+If you dont want to include any contact info, you can skip it by leaving it blank and pressing enter.{Style.RESET_ALL}""")
+    return input("Contact: ")
