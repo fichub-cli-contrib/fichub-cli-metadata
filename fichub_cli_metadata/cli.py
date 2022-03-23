@@ -20,11 +20,14 @@ from datetime import datetime
 from colorama import init, Fore, Style
 
 from .utils.fetch_data import FetchData
-from fichub_cli.utils.processing import get_format_type
-
+from fichub_cli.utils.processing import get_format_type, check_cli_outdated
+from fichub_cli_metadata import __version__
 
 init(autoreset=True)  # colorama init
 app = typer.Typer(add_completion=False)
+
+# check if the cli is outdated
+check_cli_outdated("fichub-cli-metadata", __version__)
 
 
 # @logger.catch  # for internal debugging

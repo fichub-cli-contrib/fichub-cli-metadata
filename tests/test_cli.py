@@ -35,4 +35,4 @@ def test_cli_version():
     
     assert not result.exception
     assert result.exit_code == 0
-    assert result.output.strip() == 'fichub-cli-metadata: v0.3.1'
+    assert result.output.strip() == 'fichub-cli-metadata: v0.3.2'
