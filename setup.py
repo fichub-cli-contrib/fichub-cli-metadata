@@ -10,7 +10,7 @@ setup(
     description="A metadata plugin for fetching Metadata from the Fichub API for the fichub-cli",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    version='0.3.0',
+    version='0.3.1',
     license='Apache License',
     url="https://github.com/fichub-cli-contrib/fichub-cli-metadata",
     packages=find_packages(
@@ -18,7 +18,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'fichub-cli>=0.6',
-        'rich>=10.3.0',
+        'rich>=10.3.1',
         'sqlalchemy>=1.4.31'
     ],
     entry_points='''

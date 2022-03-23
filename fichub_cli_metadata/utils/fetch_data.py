@@ -78,6 +78,7 @@ class FetchData:
                 logger.info("Input is an URL")
             urls_input = [input]
 
+        urls_input = list(set(urls_input))
         try:
             urls = check_output_log(urls_input, self.debug)
 
@@ -184,7 +185,7 @@ class FetchData:
                        "No new urls found! If output.log exists, please clear it.")
 
     def save_to_db(self, item):
-        """ Create the dn and execute insert or update crud
+        """ Create the db and execute insert or update crud
             repectively
         """
         try:
