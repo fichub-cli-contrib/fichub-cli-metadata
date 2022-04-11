@@ -113,9 +113,6 @@ class FicHub(Fichub_Base):
             if self.debug:
                 logger.error(str(e))
 
-            with open("err.log", "a") as file:
-                file.write(url.strip()+"\n")
-
             self.exit_status = 1
             if self.debug:
                 logger.error(
