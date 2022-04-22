@@ -39,15 +39,15 @@ def insert_data(db: Session, item: dict, debug: bool):
             logger.info("Adding metadata to the database.")
         tqdm.write(Fore.GREEN +
                    "Adding metadata to the database.")
+        db.commit()
+        return 0, 0
     else:
         if debug:
             logger.info(
                 "Metadata already exists. Skipping. Use --force to force-update existing data.")
         tqdm.write(Fore.RED +
                    "Metadata already exists. Skipping. Use --force to force-update existing data.\n")
-
-    db.commit()
-    return 0
+        return 1, 2
 
 
 def update_data(db: Session, item: dict, debug: bool):
@@ -95,8 +95,8 @@ def update_data(db: Session, item: dict, debug: bool):
         tqdm.write(Fore.GREEN +
                    "Metadata already exists. Overwriting metadata to the database.\n")
 
-        db.commit()
-        return 0  # exit code
+    db.commit()
+    return 0, 0  # exit code
 
 
 def dump_json(db: Session, input_db, json_file: str, debug: bool):

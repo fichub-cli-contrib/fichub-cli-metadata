@@ -56,6 +56,7 @@ Options:
   -v, --verbose          Show fic stats
   --force                Force update the metadata
   -d, --debug            Show the log in the console for debugging
+  --changelog            Save the changelog file
   --debug-log            Save the logfile for debugging
   --version              Display version & quit
   --help                 Show this message and exit.
@@ -122,6 +123,12 @@ fichub_cli metadata -i urls.txt --download-ebook epub
 
 ```
 fichub_cli metadata --fetch-urls https://archiveofourown.org/users/flamethrower/
+```
+
+- To generate a changelog of the download
+
+```
+fichub_cli  metadata -i urls.txt --changelog
 ```
 
 ---

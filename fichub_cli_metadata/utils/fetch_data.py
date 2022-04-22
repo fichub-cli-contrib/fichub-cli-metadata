@@ -14,7 +14,7 @@
 
 from fichub_cli_metadata import __version__ as plugin_version
 from fichub_cli.utils.processing import check_url, save_data, \
-    urls_preprocessing, check_output_log
+    urls_preprocessing, check_output_log, build_changelog
 from fichub_cli.utils.logging import download_processing_log, verbose_log
 from .processing import init_database, get_db, object_as_dict,\
     prompt_user_contact
@@ -46,7 +46,7 @@ console = Console()
 
 class FetchData:
     def __init__(self, out_dir="", input_db="", update_db=False, format_type=None,
-                 export_db=False, verbose=False, debug=False, automated=False, force=False):
+                 export_db=False, verbose=False, debug=False, changelog=False, automated=False, force=False):
         self.out_dir = out_dir
         self.format_type = format_type
         self.input_db = input_db
@@ -54,6 +54,7 @@ class FetchData:
         self.export_db = export_db
         self.verbose = verbose
         self.force = force
+        self.changelog = changelog
         self.debug = debug
         self.automated = automated
         self.exit_status = 0
@@ -79,7 +80,7 @@ class FetchData:
                 logger.info("Input is an URL")
             urls_input = [input]
 
-        urls = urls_preprocessing(urls_input, self.debug)
+        urls, urls_input_dedup = urls_preprocessing(urls_input, self.debug)
 
         if not self.input_db:  # create db if no existing db is given
             timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")
@@ -103,11 +104,13 @@ class FetchData:
             # when run 1st time, no db exists
             pass
 
+        downloaded_urls, no_updates_urls, err_urls = [], [], []
         if urls:
             with tqdm(total=len(urls), ascii=False,
                       unit="url", bar_format=bar_format) as pbar:
 
                 for url in urls:
+                    self.url_exit_status = 0
                     download_processing_log(self.debug, url)
                     supported_url, self.exit_status = check_url(
                         url, self.debug, self.exit_status)
@@ -131,7 +134,7 @@ class FetchData:
                             try:
                                 # if --download-ebook flag used
                                 if self.format_type is not None:
-                                    self.exit_status = save_data(
+                                    self.exit_status, self.url_exit_status = save_data(
                                         self.out_dir, fic.file_name,
                                         fic.download_url, self.debug, self.force,
                                         fic.cache_hash, self.exit_status,
@@ -147,10 +150,18 @@ class FetchData:
 
                                     # update the exit status
                                     self.exit_status = fic.exit_status
+                                    if self.url_exit_status == 0:
+                                        downloaded_urls.append(url)
+                                    elif self.url_exit_status == 2:
+                                        # already exists
+                                        err_urls.append(url)
+                                    else:
+                                        no_updates_urls.append(url)
+
                                 else:
                                     self.exit_status = 1
                                     supported_url = None
-
+                                    err_urls.append(url)
                                 pbar.update(1)
 
                             # if fic doesnt exist or the data is not fetched by the API yet
@@ -158,11 +169,13 @@ class FetchData:
                                 with open("err.log", "a") as file:
                                     file.write(url.strip()+"\n")
                                 self.exit_status = 1
+                                err_urls.append(url)
                                 pbar.update(1)
                                 pass  # skip the unsupported url
                         else:
-                            self.exit_status = 1
+                            self.exit_status = 2
                             supported_url = None
+                            err_urls.append(url)  # already exists
                             pbar.update(1)
                             if self.debug:
                                 logger.info(
@@ -179,6 +192,10 @@ class FetchData:
             typer.echo(Fore.RED +
                        "No new urls found! If output.log exists, please clear it.")
 
+        if self.changelog:
+            build_changelog(urls_input, urls_input_dedup, urls, downloaded_urls,
+                            err_urls, no_updates_urls, self.out_dir)
+
     def save_to_db(self, item):
         """ Create the db and execute insert or update crud
             repectively
@@ -193,10 +210,12 @@ class FetchData:
 
         # if force=True, dont insert, skip to else & update instead
         if not self.update_db and not self.force:
-            self.exit_status = crud.insert_data(self.db, item, self.debug)
+            self.exit_status, self.url_exit_status = crud.insert_data(
+                self.db, item, self.debug)
 
         elif self.update_db and not self.input_db == "" or self.force:
-            self.exit_status = crud.update_data(self.db, item, self.debug)
+            self.exit_status, self.url_exit_status = crud.update_data(
+                self.db, item, self.debug)
 
     def update_metadata(self):
         """ Update the metadata found in the sqlite database
@@ -240,10 +259,12 @@ class FetchData:
         except FileNotFoundError:
             urls = urls_input
 
+        downloaded_urls, no_updates_urls, err_urls = [], [], []
         with tqdm(total=len(urls), ascii=False,
                   unit="url", bar_format=bar_format) as pbar:
 
             for url in urls:
+                self.url_exit_status = 0
                 fic = FicHub(self.debug, self.automated,
                              self.exit_status)
                 fic.get_fic_metadata(url, self.format_type)
@@ -254,7 +275,7 @@ class FetchData:
                 try:
                     # if --download-ebook flag used
                     if self.format_type is not None:
-                        self.exit_status = save_data(
+                        self.exit_status, self.url_exit_status = save_data(
                             self.out_dir, fic.file_name,
                             fic.download_url, self.debug, self.force,
                             fic.cache_hash, self.exit_status,
@@ -263,13 +284,24 @@ class FetchData:
                     # update the metadata
                     if fic.fic_metadata:
                         meta_fetched_log(self.debug, url)
-                        self.exit_status = crud.update_data(
+                        self.exit_status, self.url_exit_status = crud.update_data(
                             self.db, fic.fic_metadata, self.debug)
 
                         with open("output.log", "a") as file:
                             file.write(f"{url}\n")
+
+                        if self.url_exit_status == 0:
+                            downloaded_urls.append(url)
+                        elif self.url_exit_status == 2:
+                            # already exists
+                            err_urls.append(url)
+                        else:
+                            no_updates_urls.append(url)
                     else:
                         self.exit_status = 1
+                        with open("err.log", "a") as file:
+                            file.write(url.strip()+"\n")
+                        err_urls.append(url)
 
                     pbar.update(1)
 
@@ -277,9 +309,13 @@ class FetchData:
                 except AttributeError:
                     with open("err.log", "a") as file:
                         file.write(url+"\n")
+                    err_urls.append(url)
                     self.exit_status = 1
                     pbar.update(1)
-                    pass  # skip the unsupported url
+                    continue  # skip the unsupported url
+        if self.changelog:
+            build_changelog(urls_input, urls, urls,
+                            downloaded_urls, err_urls, no_updates_urls, self.out_dir)
 
     def export_db_as_json(self):
         _, file_name = os.path.split(self.input_db)
