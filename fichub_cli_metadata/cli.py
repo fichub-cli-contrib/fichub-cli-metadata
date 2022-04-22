@@ -64,15 +64,15 @@ def metadata(
     debug: bool = typer.Option(
         False, "-d", "--debug", help="Show the log in the console for debugging", is_flag=True),
 
-    log: bool = typer.Option(
-        False, help="Save the logfile for debugging", is_flag=True),
+    debug_log: bool = typer.Option(
+        False, "--debug-log", help="Save the logfile for debugging", is_flag=True),
 
     automated: bool = typer.Option(
-        False, "-a", "--automated", help="For internal testing only", is_flag=True, hidden=True),
+        False, "-a", "--automated", help="For internal testing only",
+        is_flag=True, hidden=True),
 
     version: bool = typer.Option(
-        False, help="Display version & quit", is_flag=True)
-
+        False, "--version", help="Display version & quit", is_flag=True)
 
 ):
     """
@@ -87,7 +87,7 @@ def metadata(
     Failed downloads will be saved in the `err.log` file in the current directory
     """
 
-    if log is True:
+    if debug_log:
         timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")
         logger.remove()  # remove all existing handlers
         logger.add(f"fichub_cli - {timestamp}.log")
