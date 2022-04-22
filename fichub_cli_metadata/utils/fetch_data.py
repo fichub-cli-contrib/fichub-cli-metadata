@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from fichub_cli_metadata import __version__ as plugin_version
-from fichub_cli.utils.processing import check_url, save_data, check_output_log
+from fichub_cli.utils.processing import check_url, save_data, \
+    urls_preprocessing, check_output_log
 from fichub_cli.utils.logging import download_processing_log, verbose_log
 from .processing import init_database, get_db, object_as_dict,\
     prompt_user_contact
@@ -78,13 +79,7 @@ class FetchData:
                 logger.info("Input is an URL")
             urls_input = [input]
 
-        urls_input = list(set(urls_input))
-        try:
-            urls = check_output_log(urls_input, self.debug)
-
-        # if output.log doesnt exist, when run 1st time
-        except FileNotFoundError:
-            urls = urls_input
+        urls = urls_preprocessing(urls_input, self.debug)
 
         if not self.input_db:  # create db if no existing db is given
             timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")
