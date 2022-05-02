@@ -206,7 +206,7 @@ class FetchData:
             if self.debug:
                 logger.info(Fore.RED + str(e))
             db_not_found_log(self.debug, self.db_file)
-            sys.exit()
+            sys.exit(1)
 
         # if force=True, dont insert, skip to else & update instead
         if not self.update_db and not self.force:
@@ -225,7 +225,7 @@ class FetchData:
             self.engine, self.SessionLocal = init_database(self.db_file)
         else:
             db_not_found_log(self.debug, self.input_db)
-            sys.exit()
+            sys.exit(1)
 
         self.db: Session = next(get_db(self.SessionLocal))
         # if a db is given as input, run migrations before any operations
@@ -244,7 +244,7 @@ class FetchData:
             if self.debug:
                 logger.info(Fore.RED + str(e))
             db_not_found_log(self.debug, self.db_file)
-            sys.exit()
+            sys.exit(1)
 
         # get the urls from the db
         urls_input = []
@@ -326,7 +326,7 @@ class FetchData:
             self.engine, self.SessionLocal = init_database(self.input_db)
         else:
             db_not_found_log(self.debug, self.input_db)
-            sys.exit()
+            sys.exit(1)
 
         if self.input_db:
             self.db: Session = next(get_db(self.SessionLocal))
@@ -357,7 +357,7 @@ class FetchData:
             self.engine, self.SessionLocal = init_database(self.db_file)
         else:
             db_not_found_log(self.debug, self.input_db)
-            sys.exit()
+            sys.exit(1)
 
         self.db: Session = next(get_db(self.SessionLocal))
 

@@ -17,7 +17,7 @@ setup(
         include=['fichub_cli_metadata', 'fichub_cli_metadata.*']),
     include_package_data=True,
     install_requires=[
-        'fichub-cli>=0.6.4',
+        'fichub-cli>=0.7.0',
         'rich>=10.4.0',
         'sqlalchemy>=1.4.31'
     ],

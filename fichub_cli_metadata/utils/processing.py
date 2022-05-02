@@ -145,19 +145,14 @@ def sql_to_json(json_file: str, query_output, debug):
         if debug:
             logger.info(f"Processing {row_dict['source']}")
         tqdm.write(Fore.BLUE+f"Processing {row_dict['source']}")
-        meta_list.append(json.dumps(row_dict, indent=4))
-
-    meta_data = "{\"meta\": ["
-    for i in meta_list:
-        meta_data += str(i)+","
-    meta_data += "]}"
+        meta_list.append(row_dict)
 
     if meta_list:
         with open(json_file, 'w') as outfile:
             if debug:
                 logger.info(f"Saving {json_file}")
             tqdm.write(Fore.GREEN+f"Saving {json_file}")
-            outfile.write(meta_data)
+            json.dump(meta_list, outfile)
 
 
 def object_as_dict(obj):

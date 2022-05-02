@@ -138,7 +138,7 @@ def metadata(
         if fic.exit_status == 1:
             typer.echo(
                 Fore.RED +
-                "\nMetadata fetch failed for one or more URLs! Check " + Style.RESET_ALL +
+                "\nThe CLI ran into some errors! Check " + Style.RESET_ALL +
                 Fore.YELLOW + "err.log" + Style.RESET_ALL + Fore.RED +
                 " in the current directory for urls!" + Style.RESET_ALL)
 

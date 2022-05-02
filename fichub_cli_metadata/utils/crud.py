@@ -111,7 +111,7 @@ def dump_json(db: Session, input_db, json_file: str, debug: bool):
         if debug:
             logger.info(Fore.RED + str(e))
         db_not_found_log(debug, input_db)
-        sys.exit()
+        sys.exit(1)
 
     sql_to_json(json_file, all_rows, debug)
     db.commit()
