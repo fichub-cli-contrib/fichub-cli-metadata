@@ -64,6 +64,9 @@ def metadata(
     debug: bool = typer.Option(
         False, "-d", "--debug", help="Show the log in the console for debugging", is_flag=True),
 
+    changelog: bool = typer.Option(
+        False, "--changelog", help="Save the changelog file", is_flag=True),
+
     debug_log: bool = typer.Option(
         False, "--debug-log", help="Save the logfile for debugging", is_flag=True),
 
@@ -105,18 +108,20 @@ def metadata(
     if input and not update_db:
         fic = FetchData(debug=debug, automated=automated, format_type=format_type,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
-                        export_db=export_db, force=force, verbose=verbose)
+                        export_db=export_db, force=force, verbose=verbose,
+                        changelog=changelog)
         fic.save_metadata(input)
 
     if input_db and update_db:
 
         fic = FetchData(debug=debug, automated=automated, format_type=format_type,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
-                        export_db=export_db, force=force, verbose=verbose)
+                        export_db=export_db, force=force, verbose=verbose,
+                        changelog=changelog)
         fic.update_metadata()
 
     if export_db:
-        fic = FetchData(debug=debug, automated=automated,
+        fic = FetchData(debug=debug, automated=automated, changelog=changelog,
                         out_dir=out_dir, input_db=input_db, update_db=update_db,
                         export_db=export_db, force=force, verbose=verbose)
         fic.export_db_as_json()
@@ -133,7 +138,7 @@ def metadata(
         if fic.exit_status == 1:
             typer.echo(
                 Fore.RED +
-                "\nMetadata fetch failed for one or more URLs! Check " + Style.RESET_ALL +
+                "\nThe CLI ran into some errors! Check " + Style.RESET_ALL +
                 Fore.YELLOW + "err.log" + Style.RESET_ALL + Fore.RED +
                 " in the current directory for urls!" + Style.RESET_ALL)
 
