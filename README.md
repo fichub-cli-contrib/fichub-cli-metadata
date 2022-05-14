@@ -58,6 +58,8 @@ Options:
   -d, --debug            Show the log in the console for debugging
   --changelog            Save the changelog file
   --debug-log            Save the logfile for debugging
+  --config-init          Initialize the CLI config files
+  --config-info          Show the CLI config info
   --version              Display version & quit
   --help                 Show this message and exit.
 ```
@@ -133,7 +135,13 @@ fichub_cli  metadata -i urls.txt --changelog
 
 ---
 
-Note: If there are any database schema changes, the CLI will automatically migrate the db. A `.pre.migration` sqlite file will be created which would be your original db before any migrations as backup.
+**NOTE**
+
+- If there are any database schema changes, the CLI will automatically migrate the db. A `.pre.migration` sqlite file will be created which would be your original db before any migrations as backup.
+
+- Using the `--config-init` flag, users can re-initialize/overwrite the config files to default.
+
+- Using the `--config-info` flag, users can get all the info about the config file and its settings.
 
 ---
 

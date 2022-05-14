@@ -12,17 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 from datetime import datetime
 from tqdm import tqdm
 import sys
+import os
 from colorama import Fore
 from loguru import logger
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
+from platformdirs import PlatformDirs
 
 from . import models
 from .processing import process_extraMeta, get_ins_query, sql_to_json
 from .logging import db_not_found_log
+
+app_dirs = PlatformDirs("fichub_cli", "fichub")
 
 
 def insert_data(db: Session, item: dict, debug: bool):
@@ -53,6 +58,10 @@ def insert_data(db: Session, item: dict, debug: bool):
 def update_data(db: Session, item: dict, debug: bool):
     """ Execute update query for the db
     """
+
+    with open(os.path.join(app_dirs.user_data_dir, "config.json"), 'r') as f:
+        config = json.load(f)
+
     exists = db.query(models.Metadata).filter(
         models.Metadata.source == item['source']).first()
     if not exists:
@@ -84,8 +93,9 @@ def update_data(db: Session, item: dict, debug: bool):
                 models.Metadata.follows: follows,
                 models.Metadata.status: item['status'],
                 models.Metadata.words: item['words'],
-                models.Metadata.fic_last_updated: item['updated'],
-                models.Metadata.db_last_updated: datetime.now().astimezone().strftime('%Y-%m-%dT%H:%M:%S%z'),
+                models.Metadata.fic_last_updated: datetime.strptime(item['updated'], r'%Y-%m-%dT%H:%M:%S').strftime(
+                    config['fic_up_time_format']),
+                models.Metadata.db_last_updated: datetime.now().astimezone().strftime(config['db_up_time_format']),
                 models.Metadata.source: item['source']
             }
         )
