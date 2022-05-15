@@ -111,9 +111,14 @@ def process_extraMeta(extraMeta: str):
 def get_ins_query(item: dict):
     """ Return the insert query for the db model
     """
-
-    with open(os.path.join(app_dirs.user_data_dir, "config.json"), 'r') as f:
-        config = json.load(f)
+    try:
+        with open(os.path.join(app_dirs.user_data_dir, "config.json"), 'r') as f:
+            config = json.load(f)
+    except FileNotFoundError as err:
+        tqdm.write(str(err))
+        tqdm.write(
+            Fore.GREEN + "Run `fichub_cli --config-init` to initialize the CLI config")
+        exit(1)
 
     rated, language, genre, characters, reviews, favs, follows = process_extraMeta(
         item['extraMeta'])

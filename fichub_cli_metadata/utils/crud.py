@@ -59,8 +59,14 @@ def update_data(db: Session, item: dict, debug: bool):
     """ Execute update query for the db
     """
 
-    with open(os.path.join(app_dirs.user_data_dir, "config.json"), 'r') as f:
-        config = json.load(f)
+    try:
+        with open(os.path.join(app_dirs.user_data_dir, "config.json"), 'r') as f:
+            config = json.load(f)
+    except FileNotFoundError as err:
+        tqdm.write(str(err))
+        tqdm.write(
+            Fore.GREEN + "Run `fichub_cli --config-init` to initialize the CLI config")
+        exit(1)
 
     exists = db.query(models.Metadata).filter(
         models.Metadata.source == item['source']).first()
