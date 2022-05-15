@@ -105,96 +105,101 @@ class FetchData:
             pass
 
         downloaded_urls, no_updates_urls, err_urls = [], [], []
-        if urls:
-            with tqdm(total=len(urls), ascii=False,
-                      unit="url", bar_format=bar_format) as pbar:
 
-                for url in urls:
-                    self.url_exit_status = 0
-                    download_processing_log(self.debug, url)
-                    supported_url, self.exit_status = check_url(
-                        url, self.debug, self.exit_status)
+        try:
+            if urls:
+                with tqdm(total=len(urls), ascii=False,
+                          unit="url", bar_format=bar_format) as pbar:
 
-                    if supported_url:
-                        # check if url exists in db
-                        if self.input_db:
-                            exists = self.db.query(models.Metadata).filter(
-                                models.Metadata.source == url).first()
-                        else:
-                            exists = None
+                    for url in urls:
+                        self.url_exit_status = 0
+                        download_processing_log(self.debug, url)
+                        supported_url, self.exit_status = check_url(
+                            url, self.debug, self.exit_status)
 
-                        if not exists or self.force:
-                            fic = FicHub(self.debug, self.automated,
-                                         self.exit_status)
-                            fic.get_fic_metadata(url, self.format_type)
+                        if supported_url:
+                            # check if url exists in db
+                            if self.input_db:
+                                exists = self.db.query(models.Metadata).filter(
+                                    models.Metadata.source == url).first()
+                            else:
+                                exists = None
 
-                            if self.verbose:
-                                verbose_log(self.debug, fic)
+                            if not exists or self.force:
+                                fic = FicHub(self.debug, self.automated,
+                                             self.exit_status)
+                                fic.get_fic_metadata(url, self.format_type)
 
-                            try:
-                                # if --download-ebook flag used
-                                if self.format_type is not None:
-                                    self.exit_status, self.url_exit_status = save_data(
-                                        self.out_dir, fic.file_name,
-                                        fic.download_url, self.debug, self.force,
-                                        fic.cache_hash, self.exit_status,
-                                        self.automated)
+                                if self.verbose:
+                                    verbose_log(self.debug, fic)
 
-                                # save the data to db
-                                if fic.fic_metadata:
-                                    meta_fetched_log(self.debug, url)
-                                    self.save_to_db(fic.fic_metadata)
+                                try:
+                                    # if --download-ebook flag used
+                                    if self.format_type is not None:
+                                        self.exit_status, self.url_exit_status = save_data(
+                                            self.out_dir, fic.file_name,
+                                            fic.download_url, self.debug, self.force,
+                                            fic.cache_hash, self.exit_status,
+                                            self.automated)
 
-                                    with open("output.log", "a") as file:
-                                        file.write(f"{url}\n")
+                                    # save the data to db
+                                    if fic.fic_metadata:
+                                        meta_fetched_log(self.debug, url)
+                                        self.save_to_db(fic.fic_metadata)
 
-                                    # update the exit status
-                                    self.exit_status = fic.exit_status
-                                    if self.url_exit_status == 0:
-                                        downloaded_urls.append(url)
-                                    elif self.url_exit_status == 2:
-                                        # already exists
-                                        err_urls.append(url)
+                                        with open("output.log", "a") as file:
+                                            file.write(f"{url}\n")
+
+                                        # update the exit status
+                                        self.exit_status = fic.exit_status
+                                        if self.url_exit_status == 0:
+                                            downloaded_urls.append(url)
+                                        elif self.url_exit_status == 2:
+                                            # already exists
+                                            err_urls.append(url)
+                                        else:
+                                            no_updates_urls.append(url)
+
                                     else:
-                                        no_updates_urls.append(url)
+                                        self.exit_status = 1
+                                        supported_url = None
+                                        err_urls.append(url)
+                                    pbar.update(1)
 
-                                else:
+                                # if fic doesnt exist or the data is not fetched by the API yet
+                                except AttributeError:
+                                    with open("err.log", "a") as file:
+                                        file.write(url.strip()+"\n")
                                     self.exit_status = 1
-                                    supported_url = None
                                     err_urls.append(url)
+                                    pbar.update(1)
+                                    pass  # skip the unsupported url
+                            else:
+                                self.exit_status = 2
+                                supported_url = None
+                                err_urls.append(url)  # already exists
                                 pbar.update(1)
+                                if self.debug:
+                                    logger.info(
+                                        "Metadata already exists. Skipping. Use --force to force-update existing data.")
+                                tqdm.write(Fore.RED +
+                                           "Metadata already exists. Skipping. Use --force to force-update existing data.\n")
 
-                            # if fic doesnt exist or the data is not fetched by the API yet
-                            except AttributeError:
-                                with open("err.log", "a") as file:
-                                    file.write(url.strip()+"\n")
-                                self.exit_status = 1
-                                err_urls.append(url)
-                                pbar.update(1)
-                                pass  # skip the unsupported url
-                        else:
-                            self.exit_status = 2
-                            supported_url = None
-                            err_urls.append(url)  # already exists
-                            pbar.update(1)
-                            if self.debug:
-                                logger.info(
-                                    "Metadata already exists. Skipping. Use --force to force-update existing data.")
-                            tqdm.write(Fore.RED +
-                                       "Metadata already exists. Skipping. Use --force to force-update existing data.\n")
+                    if self.exit_status == 0:
+                        tqdm.write(Fore.GREEN +
+                                   "\nMetadata saved as " + Fore.BLUE +
+                                   f"{os.path.abspath(self.db_file)}"+Style.RESET_ALL +
+                                   Style.RESET_ALL)
+            else:
+                typer.echo(Fore.RED +
+                           "No new urls found! If output.log exists, please clear it.")
+        except KeyboardInterrupt:
+            pass
 
-                if self.exit_status == 0:
-                    tqdm.write(Fore.GREEN +
-                               "\nMetadata saved as " + Fore.BLUE +
-                               f"{os.path.abspath(self.db_file)}"+Style.RESET_ALL +
-                               Style.RESET_ALL)
-        else:
-            typer.echo(Fore.RED +
-                       "No new urls found! If output.log exists, please clear it.")
-
-        if self.changelog:
-            build_changelog(urls_input, urls_input_dedup, urls, downloaded_urls,
-                            err_urls, no_updates_urls, self.out_dir)
+        finally:
+            if self.changelog:
+                build_changelog(urls_input, urls_input_dedup, urls, downloaded_urls,
+                                err_urls, no_updates_urls, self.out_dir)
 
     def save_to_db(self, item):
         """ Create the db and execute insert or update crud
@@ -260,62 +265,69 @@ class FetchData:
             urls = urls_input
 
         downloaded_urls, no_updates_urls, err_urls = [], [], []
-        with tqdm(total=len(urls), ascii=False,
-                  unit="url", bar_format=bar_format) as pbar:
 
-            for url in urls:
-                self.url_exit_status = 0
-                fic = FicHub(self.debug, self.automated,
-                             self.exit_status)
-                fic.get_fic_metadata(url, self.format_type)
+        try:
+            with tqdm(total=len(urls), ascii=False,
+                      unit="url", bar_format=bar_format) as pbar:
 
-                if self.verbose:
-                    verbose_log(self.debug, fic)
+                for url in urls:
+                    self.url_exit_status = 0
+                    fic = FicHub(self.debug, self.automated,
+                                 self.exit_status)
+                    fic.get_fic_metadata(url, self.format_type)
 
-                try:
-                    # if --download-ebook flag used
-                    if self.format_type is not None:
-                        self.exit_status, self.url_exit_status = save_data(
-                            self.out_dir, fic.file_name,
-                            fic.download_url, self.debug, self.force,
-                            fic.cache_hash, self.exit_status,
-                            self.automated)
+                    if self.verbose:
+                        verbose_log(self.debug, fic)
 
-                    # update the metadata
-                    if fic.fic_metadata:
-                        meta_fetched_log(self.debug, url)
-                        self.exit_status, self.url_exit_status = crud.update_data(
-                            self.db, fic.fic_metadata, self.debug)
+                    try:
+                        # if --download-ebook flag used
+                        if self.format_type is not None:
+                            self.exit_status, self.url_exit_status = save_data(
+                                self.out_dir, fic.file_name,
+                                fic.download_url, self.debug, self.force,
+                                fic.cache_hash, self.exit_status,
+                                self.automated)
 
-                        with open("output.log", "a") as file:
-                            file.write(f"{url}\n")
+                        # update the metadata
+                        if fic.fic_metadata:
+                            meta_fetched_log(self.debug, url)
+                            self.exit_status, self.url_exit_status = crud.update_data(
+                                self.db, fic.fic_metadata, self.debug)
 
-                        if self.url_exit_status == 0:
-                            downloaded_urls.append(url)
-                        elif self.url_exit_status == 2:
-                            # already exists
-                            err_urls.append(url)
+                            with open("output.log", "a") as file:
+                                file.write(f"{url}\n")
+
+                            if self.url_exit_status == 0:
+                                downloaded_urls.append(url)
+                            elif self.url_exit_status == 2:
+                                # already exists
+                                err_urls.append(url)
+                            else:
+                                no_updates_urls.append(url)
                         else:
-                            no_updates_urls.append(url)
-                    else:
-                        self.exit_status = 1
+                            self.exit_status = 1
+                            with open("err.log", "a") as file:
+                                file.write(url.strip()+"\n")
+                            err_urls.append(url)
+
+                        pbar.update(1)
+
+                    # if fic doesnt exist or the data is not fetched by the API yet
+                    except AttributeError:
                         with open("err.log", "a") as file:
-                            file.write(url.strip()+"\n")
+                            file.write(url+"\n")
                         err_urls.append(url)
+                        self.exit_status = 1
+                        pbar.update(1)
+                        continue  # skip the unsupported url
 
-                    pbar.update(1)
+        except KeyboardInterrupt:
+            pass
 
-                # if fic doesnt exist or the data is not fetched by the API yet
-                except AttributeError:
-                    with open("err.log", "a") as file:
-                        file.write(url+"\n")
-                    err_urls.append(url)
-                    self.exit_status = 1
-                    pbar.update(1)
-                    continue  # skip the unsupported url
-        if self.changelog:
-            build_changelog(urls_input, urls, urls,
-                            downloaded_urls, err_urls, no_updates_urls, self.out_dir)
+        finally:
+            if self.changelog:
+                build_changelog(urls_input, urls, urls, downloaded_urls,
+                                err_urls, no_updates_urls, self.out_dir)
 
     def export_db_as_json(self):
         _, file_name = os.path.split(self.input_db)
