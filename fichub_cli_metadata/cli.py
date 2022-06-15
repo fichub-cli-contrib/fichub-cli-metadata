@@ -15,16 +15,23 @@
 import typer
 import sys
 import os
+from platformdirs import PlatformDirs
 from loguru import logger
 from datetime import datetime
 from colorama import init, Fore, Style
 
 from .utils.fetch_data import FetchData
-from fichub_cli.utils.processing import get_format_type, check_cli_outdated
+from fichub_cli.utils.processing import get_format_type, check_cli_outdated,\
+    appdir_exists_check, appdir_builder, appdir_config_info
 from fichub_cli_metadata import __version__
+
 
 init(autoreset=True)  # colorama init
 app = typer.Typer(add_completion=False)
+app_dirs = PlatformDirs("fichub_cli", "fichub")
+
+# check if app directory exists, if not, create it
+appdir_exists_check(app_dirs)
 
 # check if the cli is outdated
 check_cli_outdated("fichub-cli-metadata", __version__)
@@ -70,6 +77,12 @@ def metadata(
     debug_log: bool = typer.Option(
         False, "--debug-log", help="Save the logfile for debugging", is_flag=True),
 
+    config_init: bool = typer.Option(
+        False, "--config-init", help="Initialize the CLI config files", is_flag=True),
+
+    config_info: bool = typer.Option(
+        False, "--config-info", help="Show the CLI config info", is_flag=True),
+
     automated: bool = typer.Option(
         False, "-a", "--automated", help="For internal testing only",
         is_flag=True, hidden=True),
@@ -89,6 +102,14 @@ def metadata(
 
     Failed downloads will be saved in the `err.log` file in the current directory
     """
+
+    if config_init:
+        # initialize/overwrite the config files
+        appdir_builder(app_dirs)
+
+    if config_info:
+        # overwrite the config files
+        appdir_config_info(app_dirs)
 
     if debug_log:
         timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")

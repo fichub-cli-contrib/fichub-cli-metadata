@@ -17,10 +17,13 @@ from tqdm import tqdm
 from colorama import Fore, Style
 from loguru import logger
 import json
+import os
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
+from platformdirs import PlatformDirs
 
 from . import models
+app_dirs = PlatformDirs("fichub_cli", "fichub")
 
 
 def init_database(db):
@@ -108,6 +111,14 @@ def process_extraMeta(extraMeta: str):
 def get_ins_query(item: dict):
     """ Return the insert query for the db model
     """
+    try:
+        with open(os.path.join(app_dirs.user_data_dir, "config.json"), 'r') as f:
+            config = json.load(f)
+    except FileNotFoundError as err:
+        tqdm.write(str(err))
+        tqdm.write(
+            Fore.GREEN + "Run `fichub_cli --config-init` to initialize the CLI config")
+        exit(1)
 
     rated, language, genre, characters, reviews, favs, follows = process_extraMeta(
         item['extraMeta'])
@@ -128,8 +139,10 @@ def get_ins_query(item: dict):
         follows=follows,
         status=item['status'],
         words=item['words'],
-        fic_last_updated=item['updated'],
-        db_last_updated=datetime.now().astimezone().strftime('%Y-%m-%dT%H:%M:%S%z'),
+        fic_last_updated=datetime.strptime(item['updated'], r'%Y-%m-%dT%H:%M:%S').strftime(
+            config['fic_up_time_format']),
+        db_last_updated=datetime.now().astimezone().strftime(
+            config['db_up_time_format']),
         source=item['source']
 
     )
