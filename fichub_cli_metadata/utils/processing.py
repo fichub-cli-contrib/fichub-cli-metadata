@@ -49,7 +49,7 @@ def process_extraMeta(extraMeta: str):
         fields like language, genre etc
     """
     try:
-        extraMeta = extraMeta.split('-')
+        extraMeta = extraMeta.split(' - ')
     except AttributeError:
         tqdm.write(Fore.RED +
                    "'extraMetadata' key not found in the API response. Adding Null for missing fields.")
@@ -76,14 +76,12 @@ def process_extraMeta(extraMeta: str):
             break
         else:
             genre = None
-
     for x in extraMeta:
         if x.strip().startswith("Characters:"):
             characters = x.replace('Characters:', '').strip()
             break
         else:
             characters = None
-
     for x in extraMeta:
         if x.strip().startswith("Reviews:"):
             reviews = x.replace('Reviews:', '').strip()
