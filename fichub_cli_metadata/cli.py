@@ -57,7 +57,7 @@ def metadata(
         "", "-o", "--out-dir", help="Path to the Output directory (default: Current Directory)"),
 
     download_ebook: str = typer.Option(
-        "", "--download-ebook", help="Download the ebook as well. Specify the format: epub (default), mobi, pdf or html"),
+        "", "--download-ebook", help="Download the ebook as well. Specify the format, comma separated if multiple: epub (default), mobi, pdf or html"),
 
     fetch_urls: str = typer.Option(
         "", help="Fetch all story urls found from a page. Currently supports archiveofourown.org only"),

@@ -135,7 +135,7 @@ class FetchData:
 
                                 try:
                                     # if --download-ebook flag used
-                                    if self.format_type is not None:
+                                    if self.format_type:
                                         self.exit_status, self.url_exit_status = save_data(
                                             self.out_dir, fic.file_name,
                                             fic.download_url, self.debug, self.force,
@@ -281,7 +281,7 @@ class FetchData:
 
                     try:
                         # if --download-ebook flag used
-                        if self.format_type is not None:
+                        if self.format_type:
                             self.exit_status, self.url_exit_status = save_data(
                                 self.out_dir, fic.file_name,
                                 fic.download_url, self.debug, self.force,
