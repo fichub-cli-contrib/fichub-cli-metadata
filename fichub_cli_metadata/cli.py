@@ -124,7 +124,7 @@ def metadata(
     if not download_ebook == "":
         format_type = get_format_type(download_ebook)
     else:
-        format_type = None
+        format_type = []
 
     if input and not update_db:
         fic = FetchData(debug=debug, automated=automated, format_type=format_type,
