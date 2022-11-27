@@ -260,7 +260,7 @@ class FetchData:
             urls_input.append(row_dict['source'])
 
         try:
-            urls = check_output_log(urls_input, self.debug)
+            urls, _ = urls_preprocessing(urls_input, self.debug)
         # if output.log doesnt exist, when run 1st time
         except FileNotFoundError  as e:
             if self.debug:
