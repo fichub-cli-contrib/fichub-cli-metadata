@@ -44,66 +44,6 @@ def get_db(SessionLocal):
         db.close()
 
 
-    """ Process the extraMetadata string and return
-        fields like language, genre etc
-    """
-    try:
-        extraMeta = extraMeta.split(' - ')
-    except AttributeError:
-        tqdm.write(Fore.RED +
-                   "'extraMetadata' key not found in the API response. Adding Null for missing fields.")
-        extraMeta = ['']
-        pass
-
-    for x in extraMeta:
-        if x.strip().startswith("Rated:"):
-            rated = x.replace('Rated:', '').strip()
-            break
-        else:
-            rated = None
-
-    for x in extraMeta:
-        if x.strip().startswith("Language:"):
-            language = x.replace('Language:', '').strip()
-            break
-        else:
-            language = None
-
-    for x in extraMeta:
-        if x.strip().startswith("Genre:"):
-            genre = x.replace('Genre:', '').strip()
-            break
-        else:
-            genre = None
-    for x in extraMeta:
-        if x.strip().startswith("Characters:"):
-            characters = x.replace('Characters:', '').strip()
-            break
-        else:
-            characters = None
-    for x in extraMeta:
-        if x.strip().startswith("Reviews:"):
-            reviews = x.replace('Reviews:', '').strip()
-            break
-        else:
-            reviews = None
-
-    for x in extraMeta:
-        if x.strip().startswith("Favs:"):
-            favs = x.replace('Favs:', '').strip()
-            break
-        else:
-            favs = None
-
-    for x in extraMeta:
-        if x.strip().startswith("Follows:"):
-            follows = x.replace('Follows:', '').strip()
-            break
-        else:
-            follows = None
-
-    return rated, language, genre, characters, reviews, favs, follows
-
 def get_ins_query(item: dict):
     """ Return the insert query for the db model
     """
@@ -131,7 +71,7 @@ def get_ins_query(item: dict):
         genre=(item['rawExtendedMeta']['genres'] if 'genres' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
         characters=(item['rawExtendedMeta']['characters'] if 'characters' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
         reviews=(item['rawExtendedMeta']['reviews'] if 'reviews' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
-        favs=(item['rawExtendedMeta']['favorites'] if 'favorites' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
+        favorites=(item['rawExtendedMeta']['favorites'] if 'favorites' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
         follows=(item['rawExtendedMeta']['follows'] if 'follows' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
         status=item['status'],
         words=item['words'],
