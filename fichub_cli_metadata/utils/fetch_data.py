@@ -167,7 +167,9 @@ class FetchData:
                                     pbar.update(1)
 
                                 # if fic doesnt exist or the data is not fetched by the API yet
-                                except AttributeError:
+                                except AttributeError as e:
+                                    if self.debug:
+                                        logger.error(str(e))
                                     with open("err.log", "a") as file:
                                         file.write(url.strip()+"\n")
                                     self.exit_status = 1
@@ -209,7 +211,7 @@ class FetchData:
             models.Base.metadata.create_all(bind=self.engine)
         except OperationalError as e:
             if self.debug:
-                logger.info(Fore.RED + str(e))
+                logger.error(Fore.RED + str(e))
             db_not_found_log(self.debug, self.db_file)
             sys.exit(1)
 
@@ -259,9 +261,10 @@ class FetchData:
 
         try:
             urls = check_output_log(urls_input, self.debug)
-
         # if output.log doesnt exist, when run 1st time
-        except FileNotFoundError:
+        except FileNotFoundError  as e:
+            if self.debug:
+                logger.error(str(e))
             urls = urls_input
 
         downloaded_urls, no_updates_urls, err_urls = [], [], []
@@ -313,7 +316,9 @@ class FetchData:
                         pbar.update(1)
 
                     # if fic doesnt exist or the data is not fetched by the API yet
-                    except AttributeError:
+                    except AttributeError as e:
+                        if self.debug:
+                           logger.error(str(e))
                         with open("err.log", "a") as file:
                             file.write(url+"\n")
                         err_urls.append(url)
@@ -377,7 +382,11 @@ class FetchData:
             crud.add_fichub_id_column(self.db, self.db_backup, self.debug)
             crud.add_db_last_updated_column(
                 self.db, self.db_backup, self.debug)
-
+            crud.add_rawExtendedMeta_columns(
+                self.db, self.db_backup, self.debug)
+            crud.rename_favs_column(
+                self.db, self.db_backup, self.debug)
+            
         except OperationalError as e:
             if self.debug:
                 logger.info(Fore.RED + str(e))

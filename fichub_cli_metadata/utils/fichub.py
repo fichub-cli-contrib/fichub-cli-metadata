@@ -40,7 +40,7 @@ class FicHub(Fichub_Base):
         self.http.mount("https://", adapter)
         self.http.mount("http://", adapter)
 
-    def get_fic_metadata(self, url: str, format_type: int = 0):
+    def get_fic_metadata(self, url: str, format_type: list):
         """ **OVERRIDING FUNCTION**\n
         Sends GET request to Fichub API to fetch the metadata
         """

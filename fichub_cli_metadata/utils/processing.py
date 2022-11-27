@@ -44,7 +44,6 @@ def get_db(SessionLocal):
         db.close()
 
 
-def process_extraMeta(extraMeta: str):
     """ Process the extraMetadata string and return
         fields like language, genre etc
     """
@@ -105,7 +104,6 @@ def process_extraMeta(extraMeta: str):
 
     return rated, language, genre, characters, reviews, favs, follows
 
-
 def get_ins_query(item: dict):
     """ Return the insert query for the db model
     """
@@ -118,25 +116,26 @@ def get_ins_query(item: dict):
             Fore.GREEN + "Run `fichub_cli --config-init` to initialize the CLI config")
         exit(1)
 
-    rated, language, genre, characters, reviews, favs, follows = process_extraMeta(
-        item['extraMeta'])
-
     query = models.Metadata(
         fichub_id=item['id'],
+        fic_id = (item['rawExtendedMeta']['id'] if 'id' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
         title=item['title'],
         author=item['author'],
+        author_id=item['authorLocalId'],
+        author_url=item['authorUrl'],
         chapters=item['chapters'],
         created=item['created'],
         description=item['description'],
-        rated=rated,
-        language=language,
-        genre=genre,
-        characters=characters,
-        reviews=reviews,
-        favs=favs,
-        follows=follows,
+        rated=(item['rawExtendedMeta']['rated'] if 'rated' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
+        language=(item['rawExtendedMeta']['language'] if 'language' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
+        genre=(item['rawExtendedMeta']['genres'] if 'genres' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
+        characters=(item['rawExtendedMeta']['characters'] if 'characters' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
+        reviews=(item['rawExtendedMeta']['reviews'] if 'reviews' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
+        favs=(item['rawExtendedMeta']['favorites'] if 'favorites' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
+        follows=(item['rawExtendedMeta']['follows'] if 'follows' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
         status=item['status'],
         words=item['words'],
+        fandom = (item['rawExtendedMeta']['raw_fandom'] if 'raw_fandom' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
         fic_last_updated=datetime.strptime(item['updated'], r'%Y-%m-%dT%H:%M:%S').strftime(
             config['fic_up_time_format']),
         db_last_updated=datetime.now().astimezone().strftime(

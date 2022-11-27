@@ -13,6 +13,6 @@
 # limitations under the License.
 
 # __version__ at the top to prevent ImportError: ... partially initialized module ...
-__version__ = "0.5.2"
+__version__ = "0.5.3"
 
 from .cli import app  # entry_point
