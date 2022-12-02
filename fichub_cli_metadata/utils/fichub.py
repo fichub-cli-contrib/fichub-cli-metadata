@@ -77,47 +77,47 @@ class FicHub(Fichub_Base):
             self.fic_metadata = self.response['meta']
 
             self.file_format =[]
-            cache_urls =[]
+            self.cache_hash = {}
+            cache_urls= {}
 
             for format in format_type:
                 if format == 0:
-                    cache_urls.append(self.response['urls']['epub'])
-                    self.cache_hash = self.response['hashes']['epub']
+                    cache_urls['epub'] = self.response['urls']['epub']
+                    self.cache_hash['epub'] = self.response['hashes']['epub']
                     self.file_format.append(".epub")
 
                 elif format == 1:
-                    cache_urls.append(self.response['urls']['mobi'])
-                    self.cache_hash = self.response['hashes']['epub']
+                    cache_urls['mobi'] = self.response['urls']['mobi']
+                    self.cache_hash['mobi'] = self.response['hashes']['epub']
                     self.file_format.append(".mobi")
 
                 elif format == 2:
-                    cache_urls.append(self.response['urls']['pdf'])
-                    self.cache_hash = self.response['hashes']['epub']
+                    cache_urls['pdf'] = self.response['urls']['pdf']
+                    self.cache_hash['pdf'] = self.response['hashes']['epub']
                     self.file_format.append(".pdf")
 
                 elif format == 3:
-                    cache_urls.append(self.response['urls']['html'])
-                    self.cache_hash = self.response['hashes']['epub']
+                    cache_urls['zip'] =self.response['urls']['html']
+                    self.cache_hash['zip'] = self.response['hashes']['epub']
                     self.file_format.append(".zip")
             
-            self.file_name = []
+            self.files = {}
             for file_format in self.file_format:
-                self.file_name .append(self.response['urls']['epub'].split(
-                "/")[4].split("?")[0].replace(".epub", file_format))
-            self.download_url = []
-            for cache_url in cache_urls:
-                self.download_url.append("https://fichub.net"+cache_url)
+                self.files[self.response['urls']['epub'].split(
+                "/")[4].split("?")[0].replace(".epub", file_format)] = {
+                "hash":self.cache_hash[file_format.replace(".","")],
+                "download_url": "https://fichub.net"+cache_urls[file_format.replace(".","")]
+                }
 
         # Error: 'epub_url'
         # Reason: Unsupported URL
         except (KeyError, UnboundLocalError) as e:
             if self.debug:
-                logger.error(str(e))
-
-            self.exit_status = 1
-            if self.debug:
+                logger.error(f"Error: {str(e)} not found!")
                 logger.error(
                     f"Skipping unsupported URL: {url}")
+
+            self.exit_status = 1
             tqdm.write(
                 Fore.RED + f"\nSkipping unsupported URL: {url}" +
                 Style.RESET_ALL + Fore.CYAN +

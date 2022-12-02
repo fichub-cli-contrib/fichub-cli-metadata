@@ -137,10 +137,8 @@ class FetchData:
                                     # if --download-ebook flag used
                                     if self.format_type:
                                         self.exit_status, self.url_exit_status = save_data(
-                                            self.out_dir, fic.file_name,
-                                            fic.download_url, self.debug, self.force,
-                                            fic.cache_hash, self.exit_status,
-                                            self.automated)
+                                            self.out_dir, fic.files, self.debug, self.force,
+                                            self.exit_status, self.automated)
 
                                     # save the data to db
                                     if fic.fic_metadata:
@@ -286,10 +284,8 @@ class FetchData:
                         # if --download-ebook flag used
                         if self.format_type:
                             self.exit_status, self.url_exit_status = save_data(
-                                self.out_dir, fic.file_name,
-                                fic.download_url, self.debug, self.force,
-                                fic.cache_hash, self.exit_status,
-                                self.automated)
+                               self.out_dir, fic.files, self.debug, self.force,
+                                self.exit_status, self.automated)
 
                         # update the metadata
                         if fic.fic_metadata:

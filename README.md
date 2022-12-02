@@ -118,7 +118,7 @@ fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --export-db
 - To download the ebook along with the metadata
 
 ```
-fichub_cli metadata -i urls.txt --download-ebook epub
+fichub_cli metadata -i urls.txt --download-ebook epub,mobi
 ```
 
 - To get all story urls found from a page. Currently supports archiveofourown.org only.
