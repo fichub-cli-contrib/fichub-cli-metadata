@@ -36,7 +36,7 @@ from bs4 import BeautifulSoup
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
-from .fichub import FicHub
+from fichub_cli.utils.fichub import FicHub
 from .logging import meta_fetched_log, db_not_found_log
 
 
@@ -141,9 +141,9 @@ class FetchData:
                                             self.exit_status, self.automated)
 
                                     # save the data to db
-                                    if fic.fic_metadata:
+                                    if fic.files["meta"]:
                                         meta_fetched_log(self.debug, url)
-                                        self.save_to_db(fic.fic_metadata)
+                                        self.save_to_db(fic.files["meta"])
 
                                         with open("output.log", "a") as file:
                                             file.write(f"{url}\n")
@@ -288,10 +288,10 @@ class FetchData:
                                 self.exit_status, self.automated)
 
                         # update the metadata
-                        if fic.fic_metadata:
+                        if fic.files["meta"]:
                             meta_fetched_log(self.debug, url)
                             self.exit_status, self.url_exit_status = crud.update_data(
-                                self.db, fic.fic_metadata, self.debug)
+                                self.db, fic.files["meta"], self.debug)
 
                             with open("output.log", "a") as file:
                                 file.write(f"{url}\n")
