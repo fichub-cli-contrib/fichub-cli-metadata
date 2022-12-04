@@ -12,12 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fichub_cli_metadata import __version__ as plugin_version
-from fichub_cli.utils.processing import check_url, save_data, \
-    urls_preprocessing, check_output_log, build_changelog
-from fichub_cli.utils.logging import download_processing_log, verbose_log
-from .processing import init_database, get_db, object_as_dict,\
-    prompt_user_contact
 from . import models, crud
 import os
 import sys
@@ -32,6 +26,7 @@ from rich.console import Console
 import re
 import requests
 from bs4 import BeautifulSoup
+import traceback
 
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
@@ -39,6 +34,13 @@ from sqlalchemy.orm import Session
 from fichub_cli.utils.fichub import FicHub
 from .logging import meta_fetched_log, db_not_found_log
 
+from fichub_cli_metadata import __version__ as plugin_version
+from fichub_cli.utils.processing import check_url, save_data, \
+    urls_preprocessing, build_changelog
+from fichub_cli.utils.logging import download_processing_log, verbose_log
+from .processing import init_database, get_db, object_as_dict,\
+    prompt_user_contact
+    
 
 bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt}, {rate_fmt}{postfix}, ETA: {remaining}"
 console = Console()
@@ -167,7 +169,7 @@ class FetchData:
                                 # if fic doesnt exist or the data is not fetched by the API yet
                                 except Exception as e:
                                     if self.debug:
-                                        logger.error(str(e))
+                                        logger.error(str(traceback.format_exc()))
                                     with open("err.log", "a") as file:
                                         file.write(url.strip()+"\n")
                                     self.exit_status = 1
@@ -262,7 +264,7 @@ class FetchData:
         # if output.log doesnt exist, when run 1st time
         except FileNotFoundError  as e:
             if self.debug:
-                logger.error(str(e))
+                logger.error(str(traceback.format_exc()))
             urls = urls_input
 
         downloaded_urls, no_updates_urls, err_urls = [], [], []
@@ -314,7 +316,7 @@ class FetchData:
                     # if fic doesnt exist or the data is not fetched by the API yet
                     except Exception as e:
                         if self.debug:
-                           logger.error(str(e))
+                           logger.error(str(traceback.format_exc()))
                         with open("err.log", "a") as file:
                             file.write(url+"\n")
                         err_urls.append(url)
