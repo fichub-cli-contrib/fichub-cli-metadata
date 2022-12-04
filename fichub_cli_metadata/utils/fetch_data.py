@@ -165,7 +165,7 @@ class FetchData:
                                     pbar.update(1)
 
                                 # if fic doesnt exist or the data is not fetched by the API yet
-                                except AttributeError as e:
+                                except Exception as e:
                                     if self.debug:
                                         logger.error(str(e))
                                     with open("err.log", "a") as file:
@@ -312,7 +312,7 @@ class FetchData:
                         pbar.update(1)
 
                     # if fic doesnt exist or the data is not fetched by the API yet
-                    except AttributeError as e:
+                    except Exception as e:
                         if self.debug:
                            logger.error(str(e))
                         with open("err.log", "a") as file:
