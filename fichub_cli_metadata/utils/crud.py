@@ -26,7 +26,7 @@ from platformdirs import PlatformDirs
 from . import models
 from .processing import get_ins_query, sql_to_json
 from .logging import db_not_found_log
-from fichub_cli.processing import process_extendedMeta
+from fichub_cli.utils.processing import process_extendedMeta
 
 app_dirs = PlatformDirs("fichub_cli", "fichub")
 
