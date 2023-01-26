@@ -21,6 +21,7 @@ import os
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 from platformdirs import PlatformDirs
+from fichub_cli.utils.processing import process_extendedMeta
 
 from . import models
 app_dirs = PlatformDirs("fichub_cli", "fichub")
@@ -58,7 +59,7 @@ def get_ins_query(item: dict):
 
     query = models.Metadata(
         fichub_id=item['id'],
-        fic_id = (item['rawExtendedMeta']['id'] if 'id' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
+        fic_id = process_extendedMeta(item,'id'),
         title=item['title'],
         author=item['author'],
         author_id=item['authorLocalId'],
@@ -66,16 +67,16 @@ def get_ins_query(item: dict):
         chapters=item['chapters'],
         created=item['created'],
         description=item['description'],
-        rated=(item['rawExtendedMeta']['rated'] if 'rated' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
-        language=(item['rawExtendedMeta']['language'] if 'language' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
-        genre=(item['rawExtendedMeta']['genres'] if 'genres' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
-        characters=(item['rawExtendedMeta']['characters'] if 'characters' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
-        reviews=(item['rawExtendedMeta']['reviews'] if 'reviews' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
-        favorites=(item['rawExtendedMeta']['favorites'] if 'favorites' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
-        follows=(item['rawExtendedMeta']['follows'] if 'follows' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
+        rated=process_extendedMeta(item,'rated'),
+        language=process_extendedMeta(item,'language'),
+        genre=process_extendedMeta(item,'genre'),
+        characters=process_extendedMeta(item,'characters'),
+        reviews=process_extendedMeta(item,'reviews'),
+        favorites=process_extendedMeta(item,'favorites'),
+        follows=process_extendedMeta(item,'follows'),
         status=item['status'],
         words=item['words'],
-        fandom = (item['rawExtendedMeta']['raw_fandom'] if 'raw_fandom' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
+        fandom=process_extendedMeta(item,'raw_fandom'),
         fic_last_updated=datetime.strptime(item['updated'], r'%Y-%m-%dT%H:%M:%S').strftime(
             config['fic_up_time_format']),
         db_last_updated=datetime.now().astimezone().strftime(

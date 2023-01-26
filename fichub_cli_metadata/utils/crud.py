@@ -26,6 +26,7 @@ from platformdirs import PlatformDirs
 from . import models
 from .processing import get_ins_query, sql_to_json
 from .logging import db_not_found_log
+from fichub_cli.processing import process_extendedMeta
 
 app_dirs = PlatformDirs("fichub_cli", "fichub")
 
@@ -82,7 +83,7 @@ def update_data(db: Session, item: dict, debug: bool):
             update(
             {
                 models.Metadata.fichub_id: item['id'],
-                models.Metadata.fic_id: (item['rawExtendedMeta']['id'] if 'id' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
+                models.Metadata.fic_id: process_extendedMeta(item,'id'),
                 models.Metadata.title: item['title'],
                 models.Metadata.author: item['author'],
                 models.Metadata.author_id: item['authorLocalId'],
@@ -90,16 +91,16 @@ def update_data(db: Session, item: dict, debug: bool):
                 models.Metadata.chapters: item['chapters'],
                 models.Metadata.created: item['created'],
                 models.Metadata.description: item['description'],
-                models.Metadata.rated: (item['rawExtendedMeta']['rated'] if 'rated' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
-                models.Metadata.language: (item['rawExtendedMeta']['language'] if 'language' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
-                models.Metadata.genre: (item['rawExtendedMeta']['genres'] if 'genres' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
-                models.Metadata.characters: (item['rawExtendedMeta']['characters'] if 'characters' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
-                models.Metadata.reviews: (item['rawExtendedMeta']['reviews'] if 'reviews' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
-                models.Metadata.favorites: (item['rawExtendedMeta']['favorites'] if 'favorites' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
-                models.Metadata.follows: (item['rawExtendedMeta']['follows'] if 'follows    ' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
+                models.Metadata.rated: process_extendedMeta(item,'rated'),
+                models.Metadata.language: process_extendedMeta(item,'language'),
+                models.Metadata.genre: process_extendedMeta(item,'genre'),
+                models.Metadata.characters: process_extendedMeta(item,'characters'),
+                models.Metadata.reviews: process_extendedMeta(item,'reviews'),
+                models.Metadata.favorites: process_extendedMeta(item,'favorites'),
+                models.Metadata.follows: process_extendedMeta(item,'follows'),
                 models.Metadata.status: item['status'],
                 models.Metadata.words: item['words'],
-                models.Metadata.fandom: (item['rawExtendedMeta']['raw_fandom'] if 'raw_fandom' in item['rawExtendedMeta'] else None) if item['rawExtendedMeta'] != None else None,
+                models.Metadata.fandom: process_extendedMeta(item,'raw_fandom'),
                 models.Metadata.fic_last_updated: datetime.strptime(item['updated'], r'%Y-%m-%dT%H:%M:%S').strftime(
                     config['fic_up_time_format']),
                 models.Metadata.db_last_updated: datetime.now().astimezone().strftime(config['db_up_time_format']),
