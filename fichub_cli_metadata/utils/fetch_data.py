@@ -12,12 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fichub_cli_metadata import __version__ as plugin_version
-from fichub_cli.utils.processing import check_url, save_data, \
-    urls_preprocessing, check_output_log, build_changelog
-from fichub_cli.utils.logging import download_processing_log, verbose_log
-from .processing import init_database, get_db, object_as_dict,\
-    prompt_user_contact
 from . import models, crud
 import os
 import sys
@@ -32,13 +26,21 @@ from rich.console import Console
 import re
 import requests
 from bs4 import BeautifulSoup
+import traceback
 
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
-from .fichub import FicHub
+from fichub_cli.utils.fichub import FicHub
 from .logging import meta_fetched_log, db_not_found_log
 
+from fichub_cli_metadata import __version__ as plugin_version
+from fichub_cli.utils.processing import check_url, save_data, \
+    urls_preprocessing, build_changelog
+from fichub_cli.utils.logging import download_processing_log, verbose_log
+from .processing import init_database, get_db, object_as_dict,\
+    prompt_user_contact
+    
 
 bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt}, {rate_fmt}{postfix}, ETA: {remaining}"
 console = Console()
@@ -135,17 +137,15 @@ class FetchData:
 
                                 try:
                                     # if --download-ebook flag used
-                                    if self.format_type is not None:
+                                    if self.format_type:
                                         self.exit_status, self.url_exit_status = save_data(
-                                            self.out_dir, fic.file_name,
-                                            fic.download_url, self.debug, self.force,
-                                            fic.cache_hash, self.exit_status,
-                                            self.automated)
+                                            self.out_dir, fic.files, self.debug, self.force,
+                                            self.exit_status, self.automated)
 
                                     # save the data to db
-                                    if fic.fic_metadata:
+                                    if fic.files["meta"]:
                                         meta_fetched_log(self.debug, url)
-                                        self.save_to_db(fic.fic_metadata)
+                                        self.save_to_db(fic.files["meta"])
 
                                         with open("output.log", "a") as file:
                                             file.write(f"{url}\n")
@@ -167,7 +167,9 @@ class FetchData:
                                     pbar.update(1)
 
                                 # if fic doesnt exist or the data is not fetched by the API yet
-                                except AttributeError:
+                                except Exception as e:
+                                    if self.debug:
+                                        logger.error(str(traceback.format_exc()))
                                     with open("err.log", "a") as file:
                                         file.write(url.strip()+"\n")
                                     self.exit_status = 1
@@ -209,7 +211,7 @@ class FetchData:
             models.Base.metadata.create_all(bind=self.engine)
         except OperationalError as e:
             if self.debug:
-                logger.info(Fore.RED + str(e))
+                logger.error(Fore.RED + str(e))
             db_not_found_log(self.debug, self.db_file)
             sys.exit(1)
 
@@ -258,10 +260,11 @@ class FetchData:
             urls_input.append(row_dict['source'])
 
         try:
-            urls = check_output_log(urls_input, self.debug)
-
+            urls, _ = urls_preprocessing(urls_input, self.debug)
         # if output.log doesnt exist, when run 1st time
-        except FileNotFoundError:
+        except FileNotFoundError  as e:
+            if self.debug:
+                logger.error(str(traceback.format_exc()))
             urls = urls_input
 
         downloaded_urls, no_updates_urls, err_urls = [], [], []
@@ -281,18 +284,16 @@ class FetchData:
 
                     try:
                         # if --download-ebook flag used
-                        if self.format_type is not None:
+                        if self.format_type:
                             self.exit_status, self.url_exit_status = save_data(
-                                self.out_dir, fic.file_name,
-                                fic.download_url, self.debug, self.force,
-                                fic.cache_hash, self.exit_status,
-                                self.automated)
+                               self.out_dir, fic.files, self.debug, self.force,
+                                self.exit_status, self.automated)
 
                         # update the metadata
-                        if fic.fic_metadata:
+                        if fic.files["meta"]:
                             meta_fetched_log(self.debug, url)
                             self.exit_status, self.url_exit_status = crud.update_data(
-                                self.db, fic.fic_metadata, self.debug)
+                                self.db, fic.files["meta"], self.debug)
 
                             with open("output.log", "a") as file:
                                 file.write(f"{url}\n")
@@ -313,7 +314,9 @@ class FetchData:
                         pbar.update(1)
 
                     # if fic doesnt exist or the data is not fetched by the API yet
-                    except AttributeError:
+                    except Exception as e:
+                        if self.debug:
+                           logger.error(str(traceback.format_exc()))
                         with open("err.log", "a") as file:
                             file.write(url+"\n")
                         err_urls.append(url)
@@ -377,7 +380,11 @@ class FetchData:
             crud.add_fichub_id_column(self.db, self.db_backup, self.debug)
             crud.add_db_last_updated_column(
                 self.db, self.db_backup, self.debug)
-
+            crud.add_rawExtendedMeta_columns(
+                self.db, self.db_backup, self.debug)
+            crud.rename_favs_column(
+                self.db, self.db_backup, self.debug)
+            
         except OperationalError as e:
             if self.debug:
                 logger.info(Fore.RED + str(e))

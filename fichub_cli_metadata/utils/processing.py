@@ -21,6 +21,7 @@ import os
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 from platformdirs import PlatformDirs
+from fichub_cli.utils.processing import process_extendedMeta
 
 from . import models
 app_dirs = PlatformDirs("fichub_cli", "fichub")
@@ -44,68 +45,6 @@ def get_db(SessionLocal):
         db.close()
 
 
-def process_extraMeta(extraMeta: str):
-    """ Process the extraMetadata string and return
-        fields like language, genre etc
-    """
-    try:
-        extraMeta = extraMeta.split(' - ')
-    except AttributeError:
-        tqdm.write(Fore.RED +
-                   "'extraMetadata' key not found in the API response. Adding Null for missing fields.")
-        extraMeta = ['']
-        pass
-
-    for x in extraMeta:
-        if x.strip().startswith("Rated:"):
-            rated = x.replace('Rated:', '').strip()
-            break
-        else:
-            rated = None
-
-    for x in extraMeta:
-        if x.strip().startswith("Language:"):
-            language = x.replace('Language:', '').strip()
-            break
-        else:
-            language = None
-
-    for x in extraMeta:
-        if x.strip().startswith("Genre:"):
-            genre = x.replace('Genre:', '').strip()
-            break
-        else:
-            genre = None
-    for x in extraMeta:
-        if x.strip().startswith("Characters:"):
-            characters = x.replace('Characters:', '').strip()
-            break
-        else:
-            characters = None
-    for x in extraMeta:
-        if x.strip().startswith("Reviews:"):
-            reviews = x.replace('Reviews:', '').strip()
-            break
-        else:
-            reviews = None
-
-    for x in extraMeta:
-        if x.strip().startswith("Favs:"):
-            favs = x.replace('Favs:', '').strip()
-            break
-        else:
-            favs = None
-
-    for x in extraMeta:
-        if x.strip().startswith("Follows:"):
-            follows = x.replace('Follows:', '').strip()
-            break
-        else:
-            follows = None
-
-    return rated, language, genre, characters, reviews, favs, follows
-
-
 def get_ins_query(item: dict):
     """ Return the insert query for the db model
     """
@@ -118,25 +57,26 @@ def get_ins_query(item: dict):
             Fore.GREEN + "Run `fichub_cli --config-init` to initialize the CLI config")
         exit(1)
 
-    rated, language, genre, characters, reviews, favs, follows = process_extraMeta(
-        item['extraMeta'])
-
     query = models.Metadata(
         fichub_id=item['id'],
+        fic_id = process_extendedMeta(item,'id'),
         title=item['title'],
         author=item['author'],
+        author_id=item['authorLocalId'],
+        author_url=item['authorUrl'],
         chapters=item['chapters'],
         created=item['created'],
         description=item['description'],
-        rated=rated,
-        language=language,
-        genre=genre,
-        characters=characters,
-        reviews=reviews,
-        favs=favs,
-        follows=follows,
+        rated=process_extendedMeta(item,'rated'),
+        language=process_extendedMeta(item,'language'),
+        genre=process_extendedMeta(item,'genres'),
+        characters=process_extendedMeta(item,'characters'),
+        reviews=process_extendedMeta(item,'reviews'),
+        favorites=process_extendedMeta(item,'favorites'),
+        follows=process_extendedMeta(item,'follows'),
         status=item['status'],
         words=item['words'],
+        fandom=process_extendedMeta(item,'raw_fandom'),
         fic_last_updated=datetime.strptime(item['updated'], r'%Y-%m-%dT%H:%M:%S').strftime(
             config['fic_up_time_format']),
         db_last_updated=datetime.now().astimezone().strftime(

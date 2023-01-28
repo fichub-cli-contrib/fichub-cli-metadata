@@ -5,6 +5,8 @@ __pycache__/
 
 # ebooks
 *.epub
+*.mobi
+*.pdf
 
 # C extensions
 *.so
@@ -143,5 +145,6 @@ dmypy.json
 
 # project-extras
 *.txt
+*.lst
 *.sqlite
 *.json

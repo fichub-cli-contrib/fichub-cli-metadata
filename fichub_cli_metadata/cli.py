@@ -57,7 +57,7 @@ def metadata(
         "", "-o", "--out-dir", help="Path to the Output directory (default: Current Directory)"),
 
     download_ebook: str = typer.Option(
-        "", "--download-ebook", help="Download the ebook as well. Specify the format: epub (default), mobi, pdf or html"),
+        "", "--download-ebook", help="Download the ebook as well. Specify the format, comma separated if multiple: epub (default), mobi, pdf or html"),
 
     fetch_urls: str = typer.Option(
         "", help="Fetch all story urls found from a page. Currently supports archiveofourown.org only"),
@@ -124,7 +124,7 @@ def metadata(
     if not download_ebook == "":
         format_type = get_format_type(download_ebook)
     else:
-        format_type = None
+        format_type = []
 
     if input and not update_db:
         fic = FetchData(debug=debug, automated=automated, format_type=format_type,
@@ -159,9 +159,7 @@ def metadata(
         if fic.exit_status == 1:
             typer.echo(
                 Fore.RED +
-                "\nThe CLI ran into some errors! Check " + Style.RESET_ALL +
-                Fore.YELLOW + "err.log" + Style.RESET_ALL + Fore.RED +
-                " in the current directory for urls!" + Style.RESET_ALL)
+                "\nThe CLI ran into some errors! Check the console for the log messages!" + Style.RESET_ALL)
 
         if os.path.exists("output.log"):
             rm_output_log = typer.confirm(
