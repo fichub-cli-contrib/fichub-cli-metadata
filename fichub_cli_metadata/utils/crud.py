@@ -93,7 +93,7 @@ def update_data(db: Session, item: dict, debug: bool):
                 models.Metadata.description: item['description'],
                 models.Metadata.rated: process_extendedMeta(item,'rated'),
                 models.Metadata.language: process_extendedMeta(item,'language'),
-                models.Metadata.genre: process_extendedMeta(item,'genre'),
+                models.Metadata.genre: process_extendedMeta(item,'genres'),
                 models.Metadata.characters: process_extendedMeta(item,'characters'),
                 models.Metadata.reviews: process_extendedMeta(item,'reviews'),
                 models.Metadata.favorites: process_extendedMeta(item,'favorites'),

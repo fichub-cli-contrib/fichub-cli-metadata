@@ -69,7 +69,7 @@ def get_ins_query(item: dict):
         description=item['description'],
         rated=process_extendedMeta(item,'rated'),
         language=process_extendedMeta(item,'language'),
-        genre=process_extendedMeta(item,'genre'),
+        genre=process_extendedMeta(item,'genres'),
         characters=process_extendedMeta(item,'characters'),
         reviews=process_extendedMeta(item,'reviews'),
         favorites=process_extendedMeta(item,'favorites'),
