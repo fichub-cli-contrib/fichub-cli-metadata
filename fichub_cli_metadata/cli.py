@@ -161,12 +161,6 @@ def metadata(
                 Fore.RED +
                 "\nThe CLI ran into some errors! Check the console for the log messages!" + Style.RESET_ALL)
 
-        if os.path.exists("output.log"):
-            rm_output_log = typer.confirm(
-                Fore.BLUE+"Delete the output.log?", abort=False, show_default=True)
-            if rm_output_log is True:
-                os.remove("output.log")
-
         sys.exit(fic.exit_status)
 
     # FileNotFoundError: output.log doesnt exist, when run 1st time
