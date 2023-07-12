@@ -196,7 +196,7 @@ class FetchData:
                 typer.echo(Fore.RED +
                            "No new urls found! If output.log exists, please clear it.")
         except KeyboardInterrupt:
-            pass
+            sys.exit(2)
 
         finally:
             if self.changelog:
@@ -325,7 +325,7 @@ class FetchData:
                         continue  # skip the unsupported url
 
         except KeyboardInterrupt:
-            pass
+            sys.exit(2)
 
         finally:
             if self.changelog:

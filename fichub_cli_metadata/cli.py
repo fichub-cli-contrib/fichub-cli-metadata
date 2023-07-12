@@ -22,7 +22,7 @@ from colorama import init, Fore, Style
 
 from .utils.fetch_data import FetchData
 from fichub_cli.utils.processing import get_format_type, check_cli_outdated,\
-    appdir_exists_check, appdir_builder, appdir_config_info
+    appdir_exists_check, appdir_builder, appdir_config_info, output_log_cleanup
 from fichub_cli_metadata import __version__
 
 
@@ -114,11 +114,11 @@ def metadata(
     if debug_log:
         timestamp = datetime.now().strftime("%Y-%m-%d T%H%M%S")
         logger.remove()  # remove all existing handlers
-        logger.add(f"fichub_cli - {timestamp}.log")
+        logger.add(f"fichub_cli_metadata - {timestamp}.log")
         debug = True
         typer.echo(
             Fore.GREEN + "Creating " + Style.RESET_ALL + Fore.YELLOW +
-            f"fichub_cli - {timestamp}.log" + Style.RESET_ALL +
+            f"fichub_cli_metadata - {timestamp}.log" + Style.RESET_ALL +
             Fore.GREEN + " in the current directory!" + Style.RESET_ALL)
 
     if not download_ebook == "":
@@ -161,6 +161,7 @@ def metadata(
                 Fore.RED +
                 "\nThe CLI ran into some errors! Check the console for the log messages!" + Style.RESET_ALL)
 
+        output_log_cleanup(app_dirs)
         sys.exit(fic.exit_status)
 
     # FileNotFoundError: output.log doesnt exist, when run 1st time
