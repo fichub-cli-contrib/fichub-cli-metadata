@@ -27,6 +27,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 import traceback
+from platformdirs import PlatformDirs
 
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
@@ -36,13 +37,14 @@ from .logging import meta_fetched_log, db_not_found_log
 
 from fichub_cli_metadata import __version__ as plugin_version
 from fichub_cli.utils.processing import check_url, save_data, \
-    urls_preprocessing, build_changelog
+    urls_preprocessing, build_changelog, output_log_cleanup
 from fichub_cli.utils.logging import download_processing_log, verbose_log
 from .processing import init_database, get_db, object_as_dict,\
     prompt_user_contact
     
 
 bar_format = "{l_bar}{bar}| {n_fmt}/{total_fmt}, {rate_fmt}{postfix}, ETA: {remaining}"
+app_dirs = PlatformDirs("fichub_cli", "fichub")
 console = Console()
 
 
@@ -196,6 +198,7 @@ class FetchData:
                 typer.echo(Fore.RED +
                            "No new urls found! If output.log exists, please clear it.")
         except KeyboardInterrupt:
+            output_log_cleanup(app_dirs)
             sys.exit(2)
 
         finally:
@@ -325,6 +328,7 @@ class FetchData:
                         continue  # skip the unsupported url
 
         except KeyboardInterrupt:
+            output_log_cleanup(app_dirs)
             sys.exit(2)
 
         finally:
