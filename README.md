@@ -1,5 +1,7 @@
 <h1 align="center">fichub-cli-metadata</h1>
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/arzkar)
+
 A metadata plugin for fetching Metadata from the Fichub API for [fichub-cli](https://github.com/FicHub/fichub-cli/)<br><br>
 
 To report issues upstream for the supported sites, visit https://fichub.net/#contact<br>
