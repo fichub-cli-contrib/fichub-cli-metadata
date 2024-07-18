@@ -172,8 +172,6 @@ class FetchData:
                                 except Exception as e:
                                     if self.debug:
                                         logger.error(str(traceback.format_exc()))
-                                    with open("err.log", "a") as file:
-                                        file.write(url.strip()+"\n")
                                     self.exit_status = 1
                                     err_urls.append(url)
                                     pbar.update(1)
@@ -310,8 +308,6 @@ class FetchData:
                                 no_updates_urls.append(url)
                         else:
                             self.exit_status = 1
-                            with open("err.log", "a") as file:
-                                file.write(url.strip()+"\n")
                             err_urls.append(url)
 
                         pbar.update(1)
@@ -320,8 +316,6 @@ class FetchData:
                     except Exception as e:
                         if self.debug:
                            logger.error(str(traceback.format_exc()))
-                        with open("err.log", "a") as file:
-                            file.write(url+"\n")
                         err_urls.append(url)
                         self.exit_status = 1
                         pbar.update(1)
