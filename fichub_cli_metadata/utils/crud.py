@@ -102,8 +102,7 @@ def update_data(db: Session, item: dict, debug: bool):
                 models.Metadata.status: item['status'],
                 models.Metadata.words: item['words'],
                 models.Metadata.fandom: process_extendedMeta(item,'raw_fandom'),
-                models.Metadata.fic_last_updated: datetime.strptime(item['updated'], r'%Y-%m-%dT%H:%M:%S').strftime(
-                    config['fic_up_time_format']),
+                models.Metadata.fic_last_updated: datetime.fromisoformat(item['updated']).strftime(config['fic_up_time_format']),
                 models.Metadata.db_last_updated: datetime.now().astimezone().strftime(config['db_up_time_format']),
                 models.Metadata.source: item['source']
             }

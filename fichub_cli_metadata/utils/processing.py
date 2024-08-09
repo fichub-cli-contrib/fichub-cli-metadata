@@ -77,8 +77,7 @@ def get_ins_query(item: dict):
         status=item['status'],
         words=item['words'],
         fandom=process_extendedMeta(item,'raw_fandom'),
-        fic_last_updated=datetime.strptime(item['updated'], r'%Y-%m-%dT%H:%M:%S').strftime(
-            config['fic_up_time_format']),
+        fic_last_updated=datetime.fromisoformat(item['updated']).strftime(config['fic_up_time_format']),
         db_last_updated=datetime.now().astimezone().strftime(
             config['db_up_time_format']),
         source=item['source']
