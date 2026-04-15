@@ -27,8 +27,8 @@ pip install git+https://github.com/fichub-cli-contrib/fichub-cli-metadata@main
 # Usage
 
 ```
-> fichub_cli metadata
-Usage: fichub_cli metadata [OPTIONS] COMMAND [ARGS]...
+> fichub_cli_metadata
+Usage: fichub_cli_metadata [OPTIONS] COMMAND [ARGS]...
 
   A metadata plugin for fetching Metadata from the Fichub API for fichub-cli
 
@@ -78,61 +78,61 @@ Check `fichub_cli metadata --help` for more info.
 - To fetch metadata using an URL
 
 ```
-fichub_cli metadata -i https://archiveofourown.org/works/10916730/chapters/24276864
+fichub_cli_metadata -i https://archiveofourown.org/works/10916730/chapters/24276864
 ```
 
 - To fetch metadata using a file containing URLs
 
 ```
-fichub_cli metadata -i urls.txt
+fichub_cli_metadata -i urls.txt
 ```
 
 - To choose a output directory
 
 ```
-fichub_cli metadata -i urls.txt -o "~/Desktop/books"
+fichub_cli_metadata -i urls.txt -o "~/Desktop/books"
 ```
 
 - To save the metadata in an existing db
 
 ```
-fichub_cli metadata -i urls.txt --input-db "urls - 2022-01-29 T000558.sqlite"
+fichub_cli_metadata -i urls.txt --input-db "urls - 2022-01-29 T000558.sqlite"
 ```
 
 - To update an existing db from given input
 
 ```
-fichub_cli metadata -i urls.txt --input-db "urls - 2022-01-29 T000558.sqlite" --force
+fichub_cli_metadata -i urls.txt --input-db "urls - 2022-01-29 T000558.sqlite" --force
 ```
 
 - To self-update an existing db i.e. update each row from the db
 
 ```
-fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --update-db
+fichub_cli_metadata --input-db "urls - 2022-01-29 T000558.sqlite" --update-db
 ```
 
 - To dump an existing db as a json
 
 ```
-fichub_cli metadata --input-db "urls - 2022-01-29 T000558.sqlite" --export-db
+fichub_cli_metadata --input-db "urls - 2022-01-29 T000558.sqlite" --export-db
 ```
 
 - To download the ebook along with the metadata
 
 ```
-fichub_cli metadata -i urls.txt --download-ebook epub,mobi
+fichub_cli_metadata -i urls.txt --download-ebook epub,mobi
 ```
 
 - To get all story urls found from a page. Currently supports archiveofourown.org only.
 
 ```
-fichub_cli metadata --fetch-urls https://archiveofourown.org/users/flamethrower/
+fichub_cli_metadata --fetch-urls https://archiveofourown.org/users/flamethrower/
 ```
 
 - To generate a changelog of the download
 
 ```
-fichub_cli  metadata -i urls.txt --changelog
+fichub_cli_metadata -i urls.txt --changelog
 ```
 
 ---
